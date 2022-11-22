@@ -129,6 +129,7 @@ class GameBoard {
 
         this.draw_arrows = true;
         this.demo_mode = false;
+        this.have_hint = false;
     }
 
 // private:
@@ -587,7 +588,7 @@ class GameBoard {
         shuffled.push(t1_idx);
         shuffled.push(t2_idx);
 
-        const solvable = this.solve_board();
+        const solvable = this.solve();
         if (!solvable) {
             console.log(attempt, ": not solvable, re-shuffling");
             return this.shuffle(false, attempt, shuffled);
@@ -653,7 +654,7 @@ class GameBoard {
         return SOLVED.none;
     }
 
-    solve_board() {
+    solve() {
         const should_draw_arrows = this.draw_arrows;
         this.draw_arrows = false;
         const tmp_score = this.score;
@@ -674,6 +675,9 @@ class GameBoard {
     }
 
     hint(interactive = true) {
+        if (this.have_hint)
+            return true;
+
         if (interactive && this.demo_mode) {
             console.log("can't request hint while demo is active");
             return;
@@ -694,6 +698,9 @@ class GameBoard {
             this.unselectAll();
         }
 
+        if (status) {
+            this.have_hint = true;
+        }
         return status;
     }
 
@@ -716,6 +723,7 @@ class GameBoard {
 
         let [x1, y1] = board.coordToPos(board_row, board_col);
 
+        this.have_hint = false;
         board.dst_tile = -1;
         if (board.src_tile == -1) {
             if (tile == TILE.active) {
@@ -795,7 +803,7 @@ class GameBoard {
         this.#populateInvisibleBorder();
         this.#populateLevel(0);
 
-        const solvable = this.solve_board();
+        const solvable = this.solve();
         board.score = 0;
         attempt++;
         if (!solvable) {
