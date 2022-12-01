@@ -36,10 +36,17 @@ body {
     position: absolute
 }
 
-#about_div {
+.float-container {
+}
+
+.float-child {
+  font-size: 10px;
     margin-top: -32px;
     margin-left: 64px;
+    width: 40%;
+    float: left;
 }
+
 
 /* <dropdown>: */
 .dropbtn {

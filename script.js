@@ -10,6 +10,7 @@ const urlParams = new URLSearchParams(queryString);
 const spriteParam = urlParams.get('spriteIdx')
 const spriteIdx = spriteParam ? Number(spriteParam) : 0;
 
+const levelParam = urlParams.get('l')
 
 let level = 0;
 const DEFAULT_TIMEOUT = 60 * 5;
@@ -60,6 +61,79 @@ canvas.addEventListener('mousedown', function(e) {
     board.mouseClick(board, xpos, ypos, true);
 });
 
+
+// return board idx from active col, row
+function activeCoordToBoard(col, row) {
+    console.assert(row < board.rows -2);
+    console.assert(row >= 0);
+    console.assert(col < board.cols - 2);
+    console.assert(row >= 0);
+    return (board.rows + board.rows * col) + row +1;
+}
+
+// return board idx from active idx
+function activeIdxToBoard(idx) {
+    let c = Math.floor(idx / 14);
+    let r = Math.floor(idx % 14);
+    return activeCoordToBoard(c, r);
+}
+
+function encodeBoard() {
+    let pt = [];
+    for (let c = 0; c < 10; c++) {
+        for (let r = 0; r < 14; r++) {
+            // TODO: add active/inactive?
+            pt += board.tiles[activeCoordToBoard(c, r)][0].toString(16).padStart(2, '0');
+        }
+    }
+    console.log("pt:", pt);
+    console.log("pt: len", pt.length);
+
+    let ec = LZString.compressToEncodedURIComponent(pt);
+    console.log("ec:", ec);
+    console.log("ec len:", ec.length)
+
+    let uri = "https://wahlman.no/code/MahjongiKong?l=";
+    console.log(uri + ec);
+}
+
+function decodeBoard(ec) {
+    console.log("decodeBoard: comp len:", ec.length);
+    let pt = LZString.decompressFromEncodedURIComponent(ec);
+    console.log("decodeBoard: pt len::", pt.length);
+    console.log("pt: ", pt);
+    let tiles = [];
+    for (let i = 0; i < pt.length; i+=2) {
+        let s = pt.substring(i, i + 2);
+        tiles.push(parseInt(s, 16));
+    }
+    console.log("tiles:", tiles);
+    return tiles;
+}
+
+//function encodeBoard(text) {
+//    let uri = "https://wahlman.no/code/MahjongiKong?l="
+//    let pt = "";
+//    for (let c = 0; c < 10; c++) {
+//        for (let r = 0; r < 14; r++) {
+//            // TODO: add active/inactive?
+//            pt += board.tiles[activeCoordToBord(c, r)][0].toString(16);
+//        }
+//    }
+//
+//    console.log(uri + comp);
+//    let d = document.getElementById("qrcode")
+//    d.style.width = "100px";
+//    d.style.paddingLeft = "300px"
+//    var qrcode = new QRCode("qrcode", {
+//        text: uri + comp,
+//        width: 220,
+//        height: 220,
+//        colorDark : "#000000",
+//        colorLight : "#ffffff",
+//        correctLevel : QRCode.CorrectLevel.H
+//    });
+//}
 
 //---[ classes ]-----------------------------------------------------------------
 
@@ -404,6 +478,7 @@ class GameBoard {
         this.draw(ctx);
     }
 
+    // includes inactive area:
     idxToCoord(idx) {
         console.assert(idx < (board.rows * board.cols), this.idxToCoord.name, ": index too large:", idx);
         let r = Math.floor(idx % board.rows);
@@ -420,7 +495,6 @@ class GameBoard {
             }
         }
     }
-
 
     draw(ctx) {
         ctx.clearRect(0, 30, ctx.canvas.width, ctx.canvas.height);
@@ -795,23 +869,42 @@ class GameBoard {
         board.arrows = [];
         board.score = 0;
 
-        const empty_tile = 38;
-        for (let i = 0; i < (board.cols * board.rows); i++) {
-            board.tiles.push([empty_tile, TILE.unused]);
-        }
+        if (levelParam) {
+            console.log("using provided level");
+            const empty_tile = 38;
+            for (let i = 0; i < (board.cols * board.rows); i++) {
+                board.tiles.push([empty_tile, TILE.unused]);
+            }
+            this.#populateInvisibleBorder();
 
-        this.#populateInvisibleBorder();
-        this.#populateLevel(0);
+            // decode:
+            let new_board = decodeBoard(levelParam);
+            for (let i = 0; i < new_board.length; i++) {
+                let idx = activeIdxToBoard(i);
+                board.tiles[idx][0] = new_board[i];
+                board.tiles[idx][1] == TILE.active;
+            }
 
-        const solvable = this.solve();
-        board.score = 0;
-        attempt++;
-        if (!solvable) {
-            console.log("attempt:", attempt, "this board might not be solvable, generating new");
-            return board.init(attempt);
-            //this.shuffle();
+        } else {
+            const empty_tile = 38;
+            for (let i = 0; i < (board.cols * board.rows); i++) {
+                board.tiles.push([empty_tile, TILE.unused]);
+            }
+            this.#populateInvisibleBorder();
+
+            this.#populateLevel(0);
+
+            const solvable = this.solve();
+            board.score = 0;
+            attempt++;
+            if (!solvable) {
+                console.log("attempt:", attempt, "this board might not be solvable, generating new");
+                return board.init(attempt);
+                //this.shuffle();
+            }
+            console.log("attempt:", attempt, "this board is solvable");
+            encodeBoard();
         }
-        console.log("attempt:", attempt, "this board is solvable");
 
         timer.init(updateScoreCanvas);
         board.src_tile = -1;

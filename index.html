@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="eng">
-<head>
+  <head>
     <meta charset="UTF-8">
     <meta http=equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width,height=768" initia-scale=1">
@@ -9,55 +9,61 @@
     <link rel="stylesheet" href="style/style.css" />
 
     <link type="image/png" rel="shortcut icon" href="./assets/favicon.ico"/>
-</head>
-<body>
+  </head>
+  <body>
     <div id="board" width="1024">
-        <div class='wrapper'>
-            <div id="menu" width="900">
-                <div class="dropdown">
-                    <button id="spriteBtn" class="dropbtn">Level</button>
-                    <div class="dropdown-content">
-                        <a href=".?spriteIdx=0">Mahjong</a>
-                        <a href=".?spriteIdx=1">Chess</a>
-                    </div>
-                </div>
-                <div class="dropdown">
-                    <button id="demoId" class="dropbtn">Demo</button>
-                    <div class="dropdown-content">
-                        <a href="#" onclick="demo(true)">On</a>
-                        <a href="#" onclick="demo(false)">Off</a>
-                    </div>
-                </div>
-                <div class="dropdown">
-                    <button id="highscore" class="dropbtn">Record</button>
-                    <div id="highscore_div" class="dropdown-content">
-                    </div>
-                </div>
-                <div class="dropdown">
-                    <button id="helpBtn" class="dropbtn">Help</button>
-                    <div class="dropdown-content">
-                        <a href="#" onclick="board.hint(true);">Hint</a>
-                        <a href="#" onclick="board.shuffle(true);">Shuffle</a>
-                    </div>
-                </div>
+      <div class='wrapper'>
+        <div id="menu" width="900">
+          <div class="dropdown">
+            <button id="spriteBtn" class="dropbtn">Level</button>
+            <div class="dropdown-content">
+              <a href=".?spriteIdx=0">Mahjong</a>
+              <a href=".?spriteIdx=1">Chess</a>
             </div>
-            <div id="score_div">
-                <canvas id="score_canvas" width="500" height="51"></canvas>
+          </div>
+          <div class="dropdown">
+            <button id="demoId" class="dropbtn">Demo</button>
+            <div class="dropdown-content">
+              <a href="#" onclick="demo(true)">On</a>
+              <a href="#" onclick="demo(false)">Off</a>
             </div>
+          </div>
+          <div class="dropdown">
+            <button id="highscore" class="dropbtn">Record</button>
+            <div id="highscore_div" class="dropdown-content">
+            </div>
+          </div>
+          <div class="dropdown">
+            <button id="helpBtn" class="dropbtn">Help</button>
+            <div class="dropdown-content">
+              <a href="#" onclick="board.hint(true);">Hint</a>
+              <a href="#" onclick="board.shuffle(true);">Shuffle</a>
+            </div>
+          </div>
         </div>
+        <div id="score_div">
+          <canvas id="score_canvas" width="500" height="51"></canvas>
+        </div>
+      </div>
 
-        <div id="board_div">
-            <canvas id="board_canvas" width="1024" height="768"></canvas>
+      <div id="board_div">
+        <canvas id="board_canvas" width="1024" height="768"></canvas>
+      </div>
+
+      <script language="javascript" src="lz-string.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+      <div class="float-container">
+        <div class="float-child" id="about_div">
+          <pre>Clear two identical tiles if:                          </pre>
+          <pre>You can draw a connecting line between them.           </pre>
+          <pre>The line may make no more than two ninety degree angles</pre>
+          <pre>The line can not run through any other tiles           </pre>
+          <pre>Note: using help incurs a 60 second penalty.</pre>
         </div>
-        <div id="about_div" width="100%">
-            <pre>Clear two identical tiles if:                          </pre>
-            <pre>You can draw a connecting line between them.           </pre>
-            <pre>The line may make no more than two ninety degree angles</pre>
-            <pre>The line can not run through any other tiles           </pre>
-            <pre>Note: using help incurs a 60 second penalty.</pre>
-        </div>
-    </div>
-    <script src="script.js"> </script>
-    <script src="highscore.js"> </script>
-</body>
+        <div class="float-child" id="qrcode"></div>
+      </div>
+
+      <script src="script.js"> </script>
+      <script src="highscore.js"> </script>
+  </body>
 </html>
