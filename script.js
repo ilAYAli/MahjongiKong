@@ -13,6 +13,9 @@ const spriteIdx = spriteParam ? Number(spriteParam) : 0;
 const levelParam = urlParams.get('l')
 
 let level = 0;
+let URI;
+let QR;
+
 const DEFAULT_TIMEOUT = 60 * 5;
 
 const TILE = {
@@ -86,54 +89,39 @@ function encodeBoard() {
             pt += board.tiles[activeCoordToBoard(c, r)][0].toString(16).padStart(2, '0');
         }
     }
-    console.log("pt:", pt);
-    console.log("pt: len", pt.length);
-
     let ec = LZString.compressToEncodedURIComponent(pt);
-    console.log("ec:", ec);
-    console.log("ec len:", ec.length)
-
     let uri = "https://wahlman.no/code/MahjongiKong?l=";
     console.log(uri + ec);
+
+    URI = uri + ec;
+    let link = document.getElementById("share").getElementsByClassName("dropdown-content")[0];
+    link.style.width = "220px";
+    let qr = document.getElementById("url");
+    qr.href = URI;
+
+    return uri + ec;
 }
 
 function decodeBoard(ec) {
-    console.log("decodeBoard: comp len:", ec.length);
     let pt = LZString.decompressFromEncodedURIComponent(ec);
-    console.log("decodeBoard: pt len::", pt.length);
-    console.log("pt: ", pt);
     let tiles = [];
     for (let i = 0; i < pt.length; i+=2) {
         let s = pt.substring(i, i + 2);
         tiles.push(parseInt(s, 16));
     }
-    console.log("tiles:", tiles);
     return tiles;
 }
 
-//function encodeBoard(text) {
-//    let uri = "https://wahlman.no/code/MahjongiKong?l="
-//    let pt = "";
-//    for (let c = 0; c < 10; c++) {
-//        for (let r = 0; r < 14; r++) {
-//            // TODO: add active/inactive?
-//            pt += board.tiles[activeCoordToBord(c, r)][0].toString(16);
-//        }
-//    }
-//
-//    console.log(uri + comp);
-//    let d = document.getElementById("qrcode")
-//    d.style.width = "100px";
-//    d.style.paddingLeft = "300px"
-//    var qrcode = new QRCode("qrcode", {
-//        text: uri + comp,
-//        width: 220,
-//        height: 220,
-//        colorDark : "#000000",
-//        colorLight : "#ffffff",
-//        correctLevel : QRCode.CorrectLevel.H
-//    });
-//}
+function createQR() {
+    QR = new QRCode("qrcode", {
+        text: URI,
+        width: 200,
+        height: 200,
+        colorDark : "#000000",
+        colorLight : "#ffffff",
+        correctLevel : QRCode.CorrectLevel.H
+    });
+}
 
 //---[ classes ]-----------------------------------------------------------------
 
@@ -882,9 +870,8 @@ class GameBoard {
             for (let i = 0; i < new_board.length; i++) {
                 let idx = activeIdxToBoard(i);
                 board.tiles[idx][0] = new_board[i];
-                board.tiles[idx][1] == TILE.active;
+                board.tiles[idx][1] = TILE.active;
             }
-
         } else {
             const empty_tile = 38;
             for (let i = 0; i < (board.cols * board.rows); i++) {
@@ -903,8 +890,10 @@ class GameBoard {
                 //this.shuffle();
             }
             console.log("attempt:", attempt, "this board is solvable");
-            encodeBoard();
         }
+
+        encodeBoard();
+        createQR();
 
         timer.init(updateScoreCanvas);
         board.src_tile = -1;

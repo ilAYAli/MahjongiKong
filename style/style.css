@@ -90,3 +90,32 @@ body {
 }
 /* </dropdown> */
 
+/* share buton */
+.dropdown-share {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    max-width: 250px;
+    max-height: 250px;
+    padding: 10px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+}
+
+.dropdown-share a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown-share a:hover {background-color: #ccc}
+
+.dropdown:hover .dropdown-share {
+    display: block;
+}
+
+.dropdown:hover .dropbtn {
+    background-color: #607080;
+}
+
