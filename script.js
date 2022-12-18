@@ -737,8 +737,7 @@ class GameBoard {
     }
 
     hint(interactive = true) {
-        if (this.have_hint)
-            return true;
+        if (this.have_hint) return true;
 
         if (interactive && this.demo_mode) {
             console.log("can't request hint while demo is active");
@@ -760,9 +759,7 @@ class GameBoard {
             this.unselectAll();
         }
 
-        if (status) {
-            this.have_hint = true;
-        }
+        //if (status) this.have_hint = true;
         return status;
     }
 
