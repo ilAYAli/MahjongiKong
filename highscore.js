@@ -49,7 +49,8 @@ async function loadHighscore() {
         nameEl.className = "hs-name";
         if (row.board_url) {
             const link = document.createElement("a");
-            link.href = row.board_url;
+            const sep  = row.board_url.includes("?") ? "&" : "?";
+            link.href = row.board_url + sep + "view=1";
             link.textContent = row.name;
             link.style.color = "inherit";
             link.style.textDecoration = "underline";

@@ -290,6 +290,12 @@ canvas {
     animation: penalty-flash 0.5s ease-out;
 }
 
+/* View-only mode: hide interactive UI */
+body.view-mode #menu,
+body.view-mode #score_div,
+body.view-mode #time-bar-container { display: none !important; }
+body.view-mode #board_div { margin-top: 0; }
+
 @keyframes penalty-flash {
     0% { background: #ff4757; transform: scale(1.1); }
     100% { background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%); transform: scale(1); }

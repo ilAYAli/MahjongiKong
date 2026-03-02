@@ -11,6 +11,8 @@ const spriteParam = urlParams.get('spriteIdx')
 const spriteIdx = spriteParam ? Number(spriteParam) : 0;
 
 const levelParam = urlParams.get('l')
+const viewMode   = !!urlParams.get('view')
+if (viewMode) document.body.classList.add('view-mode');
 
 let level = 0;
 let URI;
@@ -71,6 +73,7 @@ canvas.addEventListener('mouseleave', () => {
 });
 
 canvas.addEventListener('mousedown', function(e) {
+    if (viewMode) return;
     const rect = canvas.getBoundingClientRect();
     // Calculate scale factor in case the canvas is resized by CSS
     const scaleX = canvas.width / rect.width;
@@ -100,6 +103,7 @@ canvas.addEventListener('touchend', function(e) {
 
     // Only trigger click if it's a quick tap with minimal movement
     if (dx < 10 && dy < 10 && dt < 300) {
+        if (viewMode) return;
         e.preventDefault(); // Prevent ghost clicks
         const rect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / rect.width;
@@ -764,6 +768,18 @@ class GameBoard {
 
         this.#drawArrowPath(ctx);
         this.#drawAnimations(ctx);
+
+        if (viewMode) {
+            ctx.save();
+            ctx.fillStyle = "rgba(0,0,0,0.45)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.font = "bold 64px 'Juice Avocado', sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillStyle = "rgba(162,155,254,0.25)";
+            ctx.fillText("VIEW ONLY", canvas.width / 2, canvas.height / 2);
+            ctx.restore();
+        }
 
         cancelAnimationFrame(this._rafId);
         this._rafId = requestAnimationFrame(() => this.draw(ctx));
