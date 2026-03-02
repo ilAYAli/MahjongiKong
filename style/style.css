@@ -28,9 +28,13 @@ body {
     max-width: 1064px;
     padding: 25px;
     background: linear-gradient(160deg, #1a1040 0%, #120d30 100%);
-    border: 1px solid rgba(124, 108, 240, 0.6);
+    border: 1px solid rgba(162, 155, 254, 0.8);
     border-radius: 20px;
-    box-shadow: 0 0 28px rgba(108, 92, 231, 0.3), 0 20px 60px rgba(0, 0, 0, 0.7);
+    box-shadow:
+        0 0 18px rgba(108, 92, 231, 0.7),
+        0 0 55px rgba(108, 92, 231, 0.35),
+        0 0 110px rgba(108, 92, 231, 0.15),
+        0 20px 60px rgba(0, 0, 0, 0.7);
 }
 
 .wrapper {
@@ -68,11 +72,12 @@ body {
     position: relative;
     border-radius: 12px;
     overflow: hidden;
-    background-color: transparent; /* Blends into the board background */
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: transparent;
+    border: 1px solid rgba(162, 155, 254, 0.25);
+    box-shadow: 0 0 30px rgba(108, 92, 231, 0.4), inset 0 0 40px rgba(108, 92, 231, 0.08);
     width: 100%;
     display: flex;
-    flex-direction: column; /* Stack bar above canvas */
+    flex-direction: column;
     justify-content: center;
 }
 
