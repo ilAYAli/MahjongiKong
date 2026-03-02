@@ -15,11 +15,7 @@ const viewMode   = !!urlParams.get('view')
 const viewPlayer = urlParams.get('player') || '';
 if (viewMode) document.body.classList.add('view-mode');
 if (viewMode) {
-    canvas.addEventListener('click', () => {
-        const params = new URLSearchParams(location.search);
-        params.delete('view');
-        location.search = params.toString();
-    }, { once: true });
+    canvas.addEventListener('click', () => history.back(), { once: true });
 }
 
 let level = 0;
@@ -791,7 +787,7 @@ class GameBoard {
             }
             ctx.font = "28px 'Juice Avocado', sans-serif";
             ctx.fillStyle = "rgba(162,155,254,0.35)";
-            ctx.fillText("click to play this board", canvas.width / 2, canvas.height / 2 + (viewPlayer ? 20 : 0));
+            ctx.fillText("click to go back", canvas.width / 2, canvas.height / 2 + (viewPlayer ? 20 : 0));
             ctx.restore();
         }
 
