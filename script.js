@@ -272,15 +272,36 @@ class GameBoard {
         ctx.stroke();
     }
 
+    // Draw a jagged lightning segment between (x1,y1) and (x2,y2)
+    #lightningSegment(ctx, x1, y1, x2, y2, jitter, seed) {
+        const steps = Math.max(3, Math.round(Math.hypot(x2 - x1, y2 - y1) / 12));
+        const dx = x2 - x1, dy = y2 - y1;
+        const nx = -dy / Math.hypot(dx, dy) || 0;  // normal
+        const ny =  dx / Math.hypot(dx, dy) || 0;
+        // deterministic-ish random from seed so it doesn't shimmer every frame
+        const rng = (i) => Math.sin(seed * 127.1 + i * 311.7) * 0.5 + 0.5;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        for (let i = 1; i < steps; i++) {
+            const t  = i / steps;
+            const px = x1 + dx * t;
+            const py = y1 + dy * t;
+            const off = (rng(i) - 0.5) * 2 * jitter;
+            ctx.lineTo(px + nx * off, py + ny * off);
+        }
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+    }
+
     #drawArrowPath(ctx) {
         if (!this.draw_arrows || this.arrows.length === 0) {
             return;
         }
 
-        // Demo: fast 500ms fade (the "electric" flash). Interactive: hold until click.
+        // Demo: fast 500ms fade (electric flash). Interactive: hold until click.
         let alpha = 1;
+        const elapsed = Date.now() - this.arrowShowTime;
         if (this.demo_mode) {
-            const elapsed = Date.now() - this.arrowShowTime;
             if (elapsed > 500) {
                 this.arrows.length = 0;
                 return;
@@ -288,38 +309,42 @@ class GameBoard {
             alpha = Math.max(0, 1 - elapsed / 500);
         }
 
-        ctx.save();
-        ctx.globalAlpha = alpha;
+        // Flicker seed changes every ~80ms so lightning looks alive
+        const seed = Math.floor(elapsed / 80);
 
-        // Setup glow effect
-        ctx.lineJoin = 'round';
-        ctx.lineCap = 'round';
-        ctx.lineWidth = 6;
-        ctx.strokeStyle = '#6c5ce7'; // Theme purple
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = '#a29bfe';
-        
-        ctx.beginPath();
-        let first = true;
-        this.arrows.forEach((arrow, index) => {
+        // Collect path points
+        const pts = [];
+        this.arrows.forEach((arrow, i) => {
             let [x1, y1] = board.coordToPos(arrow[0], arrow[1]);
             let [x2, y2] = board.coordToPos(arrow[2], arrow[3]);
-            x1 += (this.tile_width/2); y1 += (this.tile_height/2);
-            x2 += (this.tile_width/2); y2 += (this.tile_height/2);
-            
-            if (first) {
-                ctx.moveTo(x1, y1);
-                first = false;
-            }
-            ctx.lineTo(x2, y2);
+            x1 += this.tile_width/2;  y1 += this.tile_height/2;
+            x2 += this.tile_width/2;  y2 += this.tile_height/2;
+            if (i === 0) pts.push([x1, y1]);
+            pts.push([x2, y2]);
         });
-        ctx.stroke();
 
-        // Inner bright line
-        ctx.lineWidth = 2;
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.lineJoin = 'round';
+        ctx.lineCap  = 'round';
+
+        // Pass 1 — wide purple glow
+        ctx.lineWidth   = 8;
+        ctx.strokeStyle = '#6c5ce7';
+        ctx.shadowBlur  = 18;
+        ctx.shadowColor = '#a29bfe';
+        for (let i = 0; i < pts.length - 1; i++) {
+            this.#lightningSegment(ctx, pts[i][0], pts[i][1], pts[i+1][0], pts[i+1][1], 7, seed + i * 17);
+        }
+
+        // Pass 2 — thin bright core
+        ctx.lineWidth   = 2;
         ctx.strokeStyle = '#fff';
-        ctx.shadowBlur = 0;
-        ctx.stroke();
+        ctx.shadowBlur  = 6;
+        ctx.shadowColor = '#fff';
+        for (let i = 0; i < pts.length - 1; i++) {
+            this.#lightningSegment(ctx, pts[i][0], pts[i][1], pts[i+1][0], pts[i+1][1], 5, seed + i * 17);
+        }
 
         ctx.restore();
     }
