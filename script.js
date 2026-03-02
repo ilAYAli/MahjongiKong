@@ -288,16 +288,16 @@ class GameBoard {
             return;
         }
 
-        if (Date.now() - this.arrowShowTime > 500) {
+        if (Date.now() - this.arrowShowTime > 3000) {
             this.arrows.splice(0, this.arrows.length);
             return;
         }
 
         ctx.save();
         
-        // Fade out arrow as it expires
+        // Fade out arrow as it expires (hold full opacity for 2s, then fade over 1s)
         const elapsed = Date.now() - this.arrowShowTime;
-        const alpha = Math.max(0, 1 - (elapsed / 500));
+        const alpha = Math.max(0, 1 - Math.max(0, elapsed - 2000) / 1000);
         ctx.globalAlpha = alpha;
 
         // Setup glow effect
