@@ -1117,6 +1117,7 @@ class GameBoard {
                         board.tiles[board.dst_tile] = [dst_tile_idx, TILE.dead]
                         board.score++;
                         next_hint = DEFAULT_TIMEOUT;
+                        this.arrows.splice(0, this.arrows.length); // clear hint arrow after match
 
                         const remaining_pices = this.#getNumActiveTiles();
                         if (!remaining_pices) {
