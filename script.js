@@ -1387,20 +1387,32 @@ function updateScoreCanvas(timer)
 {
     const canvas = document.getElementById('score_canvas');
     const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
+    // Scale backing store for HiDPI/retina so text is crisp
+    const dpr = window.devicePixelRatio || 1;
+    const cssW = 110, cssH = 52;
+    if (canvas.width !== cssW * dpr || canvas.height !== cssH * dpr) {
+        canvas.width  = cssW * dpr;
+        canvas.height = cssH * dpr;
+        canvas.style.width  = cssW + 'px';
+        canvas.style.height = cssH + 'px';
+        ctx.scale(dpr, dpr);
+    }
+
+    ctx.clearRect(0, 0, cssW, cssH);
     ctx.textAlign = 'center';
 
     // Score number
     ctx.font = "bold 22px 'Juice Avocado', Arial, sans-serif";
     ctx.fillStyle = "#fff";
+    ctx.shadowBlur = 0;
     ctx.textBaseline = 'alphabetic';
-    ctx.fillText(board.totalScore.toLocaleString(), canvas.width / 2, 24);
+    ctx.fillText(board.totalScore.toLocaleString(), cssW / 2, 24);
 
     // Separator
     ctx.beginPath();
     ctx.moveTo(10, 29);
-    ctx.lineTo(canvas.width - 10, 29);
+    ctx.lineTo(cssW - 10, 29);
     ctx.strokeStyle = 'rgba(255,255,255,0.15)';
     ctx.lineWidth = 1;
     ctx.stroke();
@@ -1414,11 +1426,9 @@ function updateScoreCanvas(timer)
         ctx.globalAlpha = pulse;
         ctx.font = "bold 15px 'Juice Avocado', Arial, sans-serif";
         ctx.fillStyle = '#fff';
-        ctx.shadowColor = '#a29bfe';
-        ctx.shadowBlur = 6;
-        ctx.textBaseline = 'alphabetic';
-        ctx.fillText(`NEXT +${nextPoints}`, canvas.width / 2, canvas.height - 2);
         ctx.shadowBlur = 0;
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillText(`NEXT +${nextPoints}`, cssW / 2, cssH - 2);
         ctx.globalAlpha = 1;
     }
 
