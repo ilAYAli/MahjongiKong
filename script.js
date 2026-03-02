@@ -116,22 +116,30 @@ function activeCoordToBoard(col, row) {
     console.assert(row < board.rows -2);
     console.assert(row >= 0);
     console.assert(col < board.cols - 2);
-    console.assert(row >= 0);
-    return (board.rows + board.rows * col) + row +1;
+
+    let idx = ((row + 1) * board.rows) + (col + 1);
+    return idx;
 }
 
-// return board idx from active idx
 function activeIdxToBoard(idx) {
-    let c = Math.floor(idx / 14);
-    let r = Math.floor(idx % 14);
-    return activeCoordToBoard(c, r);
+    let row = Math.floor(idx % (board.rows - 2));
+    let col = Math.floor(idx / (board.rows - 2));
+    return activeCoordToBoard(col, row);
 }
 
-function encodeBoard() {
-    let pt = [];
-    for (let c = 0; c < 10; c++) {
-        for (let r = 0; r < 14; r++) {
-            // TODO: add active/inactive?
+function decodeBoard(encoded) {
+    let board_pt = LZString.decompressFromEncodedURIComponent(encoded);
+    let new_board = [];
+    for (let i = 0; i < board_pt.length; i+=2) {
+        new_board.push(parseInt(board_pt.substring(i, i+2), 16));
+    }
+    return new_board;
+}
+
+function createLevelUri() {
+    let pt = "";
+    for (let r = 0; r < board.active_rows; r++) {
+        for (let c = 0; c < board.active_cols; c++) {
             pt += board.tiles[activeCoordToBoard(c, r)][0].toString(16).padStart(2, '0');
         }
     }
@@ -144,18 +152,6 @@ function encodeBoard() {
     link.style.width = "220px";
     let qr = document.getElementById("url");
     qr.href = URI;
-
-    return uri + ec;
-}
-
-function decodeBoard(ec) {
-    let pt = LZString.decompressFromEncodedURIComponent(ec);
-    let tiles = [];
-    for (let i = 0; i < pt.length; i+=2) {
-        let s = pt.substring(i, i + 2);
-        tiles.push(parseInt(s, 16));
-    }
-    return tiles;
 }
 
 function createQR() {
@@ -226,8 +222,8 @@ class GameBoard {
         this.tile_width = 0;
         this.tile_height = 0;
 
-        this.src_tile = 0;
-        this.dst_tile = 0;
+        this.src_tile = -1;
+        this.dst_tile = -1;
 
         this.tiles = [];
         this.arrows = [];
@@ -272,7 +268,7 @@ class GameBoard {
         }
 
         if (Date.now() - this.arrowShowTime > 500) {
-            this.arrows.splice(0, this.arrows.length);
+            this.arrows = [];
             return;
         }
 
@@ -490,12 +486,12 @@ class GameBoard {
 
     #isReachable(r, c, tr, tc) {
         if ((c == tc) && (this.#isValidHmode(r, c, tr))) {
-            return true;
+            return [[r, c, tr, tc]];
         }
         if ((r == tr) && (this.#isValidVmove(r, c, tc))) {
-            return true;
+            return [[r, c, tr, tc]];
         }
-        return false;
+        return null;
     }
 
 
@@ -560,29 +556,31 @@ class GameBoard {
                 this.animations.push({ type: 'pop', idx: t1, tile_idx: t1_idx, start: Date.now(), duration: 500 });
                 this.animations.push({ type: 'pop', idx: t2, tile_idx: t2_idx, start: Date.now(), duration: 500 });
                 
-                // Calculate points based on time since last match
-                const timeSinceLast = (Date.now() - this.lastMatchTime) / 1000;
-                const basePoints = 100;
-                const speedBonus = Math.max(0, 10 - Math.floor(timeSinceLast)) * 20;
-                const pointsAwarded = basePoints + speedBonus;
-                this.totalScore += pointsAwarded;
-                this.lastMatchTime = Date.now();
+                // Calculate points based on time since last match (NOT in demo mode)
+                if (!this.demo_mode) {
+                    const timeSinceLast = (Date.now() - this.lastMatchTime) / 1000;
+                    const basePoints = 100;
+                    const speedBonus = Math.max(0, 10 - Math.floor(timeSinceLast)) * 20;
+                    const pointsAwarded = basePoints + speedBonus;
+                    this.totalScore += pointsAwarded;
+                    this.lastMatchTime = Date.now();
 
-                const [r, c] = this.idxToCoord(t1);
-                this.animations.push({
-                    type: 'points',
-                    x: r * this.tile_width + this.tile_width/2,
-                    y: c * this.tile_height + this.tile_height/2,
-                    points: pointsAwarded,
-                    start: Date.now(),
-                    duration: 1000
-                });
+                    const [r, c] = this.idxToCoord(t1);
+                    this.animations.push({
+                        type: 'points',
+                        x: r * this.tile_width + this.tile_width/2,
+                        y: c * this.tile_height + this.tile_height/2,
+                        points: pointsAwarded,
+                        start: Date.now(),
+                        duration: 1000
+                    });
+                }
 
                 this.tiles[t1][1] = TILE.dead;
                 this.tiles[t2][1] = TILE.dead;
             }
         }
-        this.draw(ctx);
+        // No manual draw(ctx) here, the animation loop handles it
     }
 
     // includes inactive area:
@@ -715,65 +713,61 @@ class GameBoard {
     }
 
     hasValidPath(p1, p2) {
-        this.arrows.length = 0; // Clear only once at start
         let [p1x, p1y] = this.idxToCoord(p1);
         let [p2x, p2y] = this.idxToCoord(p2);
 
-        if (this.#isReachable(p1x, p1y, p2x, p2y)) {
-            // point 1:
-            this.arrows.push([ p1x, p1y, p2x, p2y ]);
-            return true;
-        }
+        let path = this.#isReachable(p1x, p1y, p2x, p2y);
+        if (path) return path;
 
         // check horizontal -> vertical:
-        if (true) {
-            let valid_rows = this.#allValidRowsFromPoint(p1x, p1y);
-            for (let r = 0; r < valid_rows.length; r++) {
-                if (this.#isReachable(valid_rows[r], p1y, p2x, p2y)) {
-                    // point 2:
-                    this.arrows.push([ p1x, p1y, valid_rows[r], p1y ]);
-                    this.arrows.push([ valid_rows[r], p1y, p2x, p2y ]);
-                    return true;
-                }
+        let valid_rows = this.#allValidRowsFromPoint(p1x, p1y);
+        for (let r = 0; r < valid_rows.length; r++) {
+            let p2_path = this.#isReachable(valid_rows[r], p1y, p2x, p2y);
+            if (p2_path) {
+                return [
+                    [p1x, p1y, valid_rows[r], p1y],
+                    ...p2_path
+                ];
+            }
 
-                let valid_cols = this.#allValidColsFromPoint(valid_rows[r], p1y)
-                for (let c = 0; c < valid_cols.length; c++) {
-                    if (this.#isReachable(valid_rows[r], valid_cols[c], p2x, p2y)) {
-                        // point 3:
-                        this.arrows.push([ p1x, p1y, valid_rows[r], p1y ]);
-                        this.arrows.push([ valid_rows[r], p1y, valid_rows[r], valid_cols[c] ]);
-                        this.arrows.push([ valid_rows[r], valid_cols[c], p2x, p2y ]);
-                        return true;
-                    }
+            let valid_cols = this.#allValidColsFromPoint(valid_rows[r], p1y)
+            for (let c = 0; c < valid_cols.length; c++) {
+                let p3_path = this.#isReachable(valid_rows[r], valid_cols[c], p2x, p2y);
+                if (p3_path) {
+                    return [
+                        [p1x, p1y, valid_rows[r], p1y],
+                        [valid_rows[r], p1y, valid_rows[r], valid_cols[c]],
+                        ...p3_path
+                    ];
                 }
             }
         }
 
         // vertical -> horizontal:
-        if (true) {
-            let valid_cols = this.#allValidColsFromPoint(p1x, p1y);
-            for (let c = 0; c < valid_cols.length; c++) {
-                if (this.#isReachable(p1x, valid_cols[c], p2x, p2y)) {
-                    // point 2:
-                    this.arrows.push([ p1x, p1y, p1x, valid_cols[c] ]);
-                    this.arrows.push([ p1x, valid_cols[c], p2x, p2y ]);
-                    return true;
-                }
+        let valid_cols = this.#allValidColsFromPoint(p1x, p1y);
+        for (let c = 0; c < valid_cols.length; c++) {
+            let p2_path = this.#isReachable(p1x, valid_cols[c], p2x, p2y);
+            if (p2_path) {
+                return [
+                    [p1x, p1y, p1x, valid_cols[c]],
+                    ...p2_path
+                ];
+            }
 
-                let valid_rows = this.#allValidRowsFromPoint(p1x, valid_cols[c])
-                for (let r = 0; r < valid_rows.length; r++) {
-                    if (this.#isReachable(valid_rows[r], valid_cols[c], p2x, p2y)) {
-                        // point 3:
-                        this.arrows.push([ p1x, p1y, p1x, valid_cols[c] ]);
-                        this.arrows.push([ p1x, valid_cols[c], valid_rows[r], valid_cols[c] ]);
-                        this.arrows.push([ valid_rows[r], valid_cols[c], p2x, p2y ]);
-                        return true;
-                    }
+            let valid_rows = this.#allValidRowsFromPoint(p1x, valid_cols[c])
+            for (let r = 0; r < valid_rows.length; r++) {
+                let p3_path = this.#isReachable(valid_rows[r], valid_cols[c], p2x, p2y);
+                if (p3_path) {
+                    return [
+                        [p1x, p1y, p1x, valid_cols[c]],
+                        [p1x, valid_cols[c], valid_rows[r], valid_cols[c]],
+                        ...p3_path
+                    ];
                 }
             }
         }
 
-        return false;
+        return null;
     }
 
     shuffle(interactive = true, attempt = 0, shuffled = []) {
@@ -808,7 +802,6 @@ class GameBoard {
 
         if (t2_idx == -1) {
             console.log("attempt:", attempt, "unable to find any tiles to swap");
-            this.tiles = structuredClone(board_cpy);
             return false;
         }
 
@@ -829,7 +822,6 @@ class GameBoard {
             this.tiles[elt][1] = TILE.selected;
         });
 
-        this.draw(ctx);
         this.unselectAll();
 
         if (interactive) {
@@ -842,7 +834,7 @@ class GameBoard {
 
     autosolveImpl() {
         const active_pre = this.#getNumActiveTiles();
-        let valid = false;
+        let valid_path = null;
         for (let sidx = 0; sidx < (this.rows * this.cols); sidx++) {
             let [src_tile_idx, src_tile_state] = this.tiles[sidx];
             if (src_tile_state != TILE.active)
@@ -861,28 +853,28 @@ class GameBoard {
 
                 this.tiles[sidx][1] = TILE.selected;
                 this.tiles[didx][1] = TILE.selected;
-                valid = this.hasValidPath(sidx, didx);
-                if (!valid) {
+                valid_path = this.hasValidPath(sidx, didx);
+                if (!valid_path) {
                     this.tiles[sidx][1] = TILE.active;
                     this.tiles[didx][1] = TILE.active;
                     continue;
                 }
 
+                // Found a match! Store path for drawing
+                this.arrows = valid_path;
+                this.arrowShowTime = Date.now();
                 return SOLVED.one;
             }
         }
         const active_post = this.#getNumActiveTiles();
         if (!active_post) {
-            //console.log("[autosolve] this board was solved");
             return SOLVED.all;
         }
 
         if (active_pre != active_post) {
-            //console.log("[autosolve] one move was solved");
             return SOLVED.one;
         }
 
-        //console.log("[autosolve] this board is not solvable");
         return SOLVED.none;
     }
 
@@ -901,7 +893,6 @@ class GameBoard {
 
         this.tiles = structuredClone(board_clone);
         this.score = tmp_score;
-        this.draw(ctx);
         this.draw_arrows = should_draw_arrows;
         return status == SOLVED.all;
     }
@@ -916,7 +907,6 @@ class GameBoard {
         const should_draw_arrows = this.draw_arrows;
         board.draw_arrows = true;
         const status = this.autosolveImpl();
-        board.draw(ctx);
         board.draw_arrows = should_draw_arrows;
 
         if (interactive) {
@@ -931,7 +921,6 @@ class GameBoard {
             this.unselectAll();
         }
 
-        //if (status) this.have_hint = true;
         return status;
     }
 
@@ -952,10 +941,7 @@ class GameBoard {
         let [board_row, board_col] = board.idxToCoord(board_idx);
         let [tile_idx, tile] = board.tiles[board_idx];
 
-        let [x1, y1] = board.coordToPos(board_row, board_col);
-
         this.have_hint = false;
-        board.dst_tile = -1;
         if (board.src_tile == -1) {
             if (tile == TILE.active) {
                 board.src_tile = board_idx;
@@ -964,7 +950,7 @@ class GameBoard {
         } else {
             let [src_tile_idx, src_tile_state] = board.tiles[board.src_tile];
 
-            if (tile != TILE.active) {
+            if (tile != TILE.active || board_idx == board.src_tile) {
                 board.tiles[board.src_tile][1] = TILE.active;
             } else {
                 board.dst_tile = board_idx;
@@ -976,7 +962,8 @@ class GameBoard {
                     board.tiles[board.dst_tile] = [dst_tile_idx, TILE.active]
                 } else {
                     board.tiles[board.dst_tile] = [dst_tile_idx, TILE.selected];
-                    if (!board.hasValidPath(board.src_tile, board_idx)) {
+                    const valid_path = board.hasValidPath(board.src_tile, board_idx);
+                    if (!valid_path) {
                         board.tiles[board.src_tile] = [src_tile_idx, TILE.active]
                         board.tiles[board.dst_tile] = [dst_tile_idx, TILE.active]
                     } else {
@@ -984,21 +971,13 @@ class GameBoard {
                         const [src_idx, src_state] = board.tiles[board.src_tile];
                         const [dst_idx, dst_state] = board.tiles[board.dst_tile];
                         
-                        this.animations.push({
-                            type: 'pop',
-                            idx: board.src_tile,
-                            tile_idx: src_idx,
-                            start: Date.now(),
-                            duration: 500
-                        });
-                        this.animations.push({
-                            type: 'pop',
-                            idx: board_idx,
-                            tile_idx: dst_idx,
-                            start: Date.now(),
-                            duration: 500
-                        });
+                        this.animations.push({ type: 'pop', idx: board.src_tile, tile_idx: src_idx, start: Date.now(), duration: 500 });
+                        this.animations.push({ type: 'pop', idx: board_idx, tile_idx: dst_idx, start: Date.now(), duration: 500 });
                         
+                        // Store path for drawing
+                        this.arrows = valid_path;
+                        this.arrowShowTime = Date.now();
+
                         // Calculate points based on time since last match
                         const timeSinceLast = (Date.now() - this.lastMatchTime) / 1000;
                         const basePoints = 100;
@@ -1025,6 +1004,8 @@ class GameBoard {
                         if (!remaining_pices) {
                             gameOver(timer.elapsed);
                             board.init();
+                            board.src_tile = -1;
+                            board.dst_tile = -1;
                             return;
                         }
                     }
@@ -1033,8 +1014,6 @@ class GameBoard {
             board.src_tile = -1;
             board.dst_tile = -1;
         }
-
-        board.draw(ctx);
     }
 
 
@@ -1095,95 +1074,64 @@ class GameBoard {
             if (!solvable) {
                 console.log("attempt:", attempt, "this board might not be solvable, generating new");
                 return board.init(attempt);
-                //this.shuffle();
             }
-            console.log("attempt:", attempt, "this board is solvable");
         }
-
-        encodeBoard();
-        createQR();
-
-        timer.init(updateScoreCanvas);
-        board.src_tile = -1;
-        board.dst_tile = -1;
-        board.draw(ctx);
+        this.draw(ctx);
     }
 }
 
 
-function getSpriteIndex(idx)
-{
-    if (idx < 0 || idx > 1)
-        idx = 0;
-
+function getSpriteIndex(idx) {
+    let sheet;
     switch (idx) {
-        case 0: {
-            let ss = new SpriteSheet(
-                64, 64,
-                5, 10,
-                'assets/deck_mahjong_dark_0.png',
-                'assets/deck_mahjong_light_0.png'
-            );
-            ss.empty_tile = 38; // 38: invisible, 49: block
-            ss.unused_tiles = [ 38, 39, 48, 49 ];
-            return ss;
-        }
-
-        case 1: {
-            let ss = new SpriteSheet(
-                64, 64,
-                6, 12,
-                'assets/chess.png',
-                'assets/chess.png'
-            );
-            ss.empty_tile = 71;
-            return ss;
-        }
-
-
-        case 2: {
-            let ss = new SpriteSheet(
-                84, 84,
-                8, 4,
-                'assets/pieces.png',
-                'assets/pieces.png'
-            );
-            ss.empty_tile = 28;
-            return ss;
-        }
-
-        case 3: {
-            let ss = new SpriteSheet(
-                48, 64,
-                4, 16,
-                'assets/cards.jpg',
-                'assets/cards.jpg'
-            );
-            ss.empty_tile = 15;
-            return ss;
-        }
+        case 0:
+            sheet = new SpriteSheet(128, 128, 10, 4,
+                                    "assets/deck_mahjong_dark_0.png",
+                                    "assets/deck_mahjong_light_0.png");
+            sheet.empty_tile = 38;
+            sheet.unused_tiles = [38, 39];
+            break;
+        case 1:
+            sheet = new SpriteSheet(128, 128, 6, 2,
+                                    "assets/pieces.png",
+                                    "assets/pieces.png");
+            sheet.empty_tile = 12;
+            sheet.unused_tiles = [];
+            break;
+        case 2:
+            sheet = new SpriteSheet(128, 128, 6, 1,
+                                    "assets/chess.png",
+                                    "assets/chess.png");
+            sheet.empty_tile = 6;
+            sheet.unused_tiles = [];
+            break;
+        case 3:
+            sheet = new SpriteSheet(128, 192, 13, 4,
+                                    "assets/cards.jpg",
+                                    "assets/cards.jpg");
+            sheet.empty_tile = 52;
+            sheet.unused_tiles = [];
+            break;
     }
-
-    return undefined;
+    return sheet;
 }
 
 
-// globals:
 const timer = {
+    elapsed: 0,
     timerid: null,
     callback: null,
-    elapsed: 0,
+
+    tick: function() {
+        this.elapsed++;
+        this.callback(this);
+    },
     start: function() {
         if (!this.timerid) {
-            const timerTick = this.tick.bind(this);
-            this.timerid = window.setInterval(() => {
-              timerTick();
-            }, 1000);
-            //console.log("starting timer:", this.timerid);
+            this.timerid = setInterval(this.tick.bind(this), 1000);
         }
     },
     stop: function() {
-        //console.log("stopping timer:", this.timerid);
         if (this.timerid) {
             clearInterval(this.timerid);
             this.timerid = null;
@@ -1204,18 +1152,11 @@ const timer = {
         
         const timerStart = this.start.bind(this);
         window.onfocus = function () {
-            //console.log("on focus");
             timerStart();
         };
-
-        const timerStop = this.stop.bind(this);
         window.onblur = function () {
-            //console.log("on blur");
-            timerStop();
+            //timerStop();
         };
-    },
-    tick: function() {
-        this.elapsed++;
         this.callback(this);
     },
 };
@@ -1257,6 +1198,7 @@ function updateScoreCanvas(timer)
 {
     let xpos = 0;
     const canvas = document.getElementById('score_canvas');
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
@@ -1274,44 +1216,39 @@ function updateScoreCanvas(timer)
         next_hint = DEFAULT_TIMEOUT;
         console.log("scheduling autosolve");
         const status = board.hint(false);
-        if (status == SOLVED.none) {
-            alert("this board might not be solvable");
+        if (status == SOLVED.all) {
+            console.log("board is solved");
         }
     }
 }
 
 
 var demoId = null;
-function demo(activate = true, delay = 1000) {
-    if (activate) {
-        if (board.demo_mode) {
-            console.log("demo is already active");
-            return;
-        }
-
-        if (demoId)
-            return;
-
-        //timer.stop();
+function demo() {
+    const delay = 500;
+    if (!board.demo_mode) {
         board.demo_mode = true;
-        board.draw_arrows = true;
+        board.init();
+        board.solve(); // check if solvable first
+
         demoId = setInterval(() => {
-            const status = board.hint(false);
+            const status = board.autosolveImpl();
             switch (status) {
-                case SOLVED.none:
-                    console.log("unable to solve board, stopping demo");
-                    clearInterval(demoId);
-                    board.demo_mode = false;
-                    break;
                 case SOLVED.all:
-                    console.log("board solved, resarting");
-                    board.init();
-                    break;
+                   console.log("all solved");
+                   board.demo_mode = false;
+                   clearInterval(demoId);
+                   board.init();
+                   break;
+                case SOLVED.none:
+                   console.log("none solved, re-shuffling");
+                   board.shuffle();
+                   break;
                 case SOLVED.one:
-                    window.setTimeout(() => {
-                        board.removeSelectedTilePair();
-                    }, delay / 2);
-                    break;
+                   setTimeout(() => {
+                       board.removeSelectedTilePair();
+                   }, delay / 2);
+                   break;
             }
         }, delay);
     } else {
@@ -1324,4 +1261,3 @@ function demo(activate = true, delay = 1000) {
         demoId = null;
     };
 }
-
