@@ -294,3 +294,88 @@ canvas {
     0% { background: #ff4757; transform: scale(1.1); }
     100% { background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%); transform: scale(1); }
 }
+
+/* ---------- Score submission modal ---------- */
+#hs-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+#hs-modal-box {
+    background: linear-gradient(160deg, #1e1260 0%, #130e38 100%);
+    border: 1px solid rgba(162, 155, 254, 0.4);
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.7), 0 0 30px rgba(108,92,231,0.3);
+    padding: 36px 40px;
+    min-width: 320px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+#hs-modal-title {
+    font-family: 'Juice Avocado', sans-serif;
+    font-size: 28px;
+    letter-spacing: 2px;
+    color: #a29bfe;
+}
+
+#hs-modal-score {
+    font-family: 'Juice Avocado', sans-serif;
+    font-size: 22px;
+    color: #ffd700;
+}
+
+#hs-modal-input {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(162,155,254,0.4);
+    border-radius: 8px;
+    color: #eee;
+    font-size: 18px;
+    font-family: 'Juice Avocado', sans-serif;
+    padding: 10px 16px;
+    text-align: center;
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#hs-modal-input:focus {
+    border-color: #a29bfe;
+    box-shadow: 0 0 8px rgba(162,155,254,0.4);
+}
+
+#hs-modal-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+#hs-modal-submit, #hs-modal-skip {
+    font-family: 'Juice Avocado', sans-serif;
+    font-size: 16px;
+    padding: 10px 28px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+
+#hs-modal-submit {
+    background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+    color: #fff;
+    box-shadow: 0 0 12px rgba(108,92,231,0.5);
+}
+
+#hs-modal-skip {
+    background: rgba(255,255,255,0.1);
+    color: #aaa;
+}
+
+#hs-modal-submit:hover, #hs-modal-skip:hover { opacity: 0.8; }

@@ -63,33 +63,50 @@ async function loadHighscore() {
 }
 
 async function gameOver(elapsed, totalScore) {
-    const raw = window.prompt(
-        `Board cleared!\nYour score: ${totalScore.toLocaleString()} pts\n\nEnter your name for the global highscore:`
-    );
+    return new Promise((resolve) => {
+        const modal    = document.getElementById("hs-modal");
+        const scoreEl  = document.getElementById("hs-modal-score");
+        const input    = document.getElementById("hs-modal-input");
+        const submit   = document.getElementById("hs-modal-submit");
+        const skip     = document.getElementById("hs-modal-skip");
 
-    const name = (raw ?? "").trim();
-    if (!name) return;
+        scoreEl.textContent = `${totalScore.toLocaleString()} pts`;
+        input.value = "";
+        modal.style.display = "flex";
+        setTimeout(() => input.focus(), 50);
 
-    let result;
-    try {
-        const resp = await fetch(`${API_BASE}/highscores`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, score: totalScore }),
-        });
-        const text = await resp.text();
-        result = text ? JSON.parse(text) : {};
-        if (!resp.ok) throw new Error(result.error ?? `HTTP ${resp.status}`);
-    } catch (err) {
-        alert(`Could not save score: ${err.message}`);
-        return;
-    }
+        async function doSubmit() {
+            const name = input.value.trim();
+            if (!name) { input.focus(); return; }
+            modal.style.display = "none";
 
-    const medal = result.rank === 1 ? "Gold #1!" :
-                  result.rank === 2 ? "Silver #2!" :
-                  result.rank === 3 ? "Bronze #3!" :
-                  `#${result.rank}`;
-    alert(`Score saved! You are ${medal}`);
+            let result;
+            try {
+                const resp = await fetch(`${API_BASE}/highscores`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name, score: totalScore }),
+                });
+                const text = await resp.text();
+                result = text ? JSON.parse(text) : {};
+                if (!resp.ok) throw new Error(result.error ?? `HTTP ${resp.status}`);
+            } catch (err) {
+                alert(`Could not save score: ${err.message}`);
+                resolve();
+                return;
+            }
 
-    loadHighscore();
+            const medal = result.rank === 1 ? "Gold #1!" :
+                          result.rank === 2 ? "Silver #2!" :
+                          result.rank === 3 ? "Bronze #3!" :
+                          `#${result.rank}`;
+            alert(`Score saved! You are ${medal}`);
+            loadHighscore();
+            resolve();
+        }
+
+        submit.onclick = doSubmit;
+        skip.onclick   = () => { modal.style.display = "none"; resolve(); };
+        input.onkeydown = (e) => { if (e.key === "Enter") doSubmit(); };
+    });
 }
