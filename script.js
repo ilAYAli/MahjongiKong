@@ -288,16 +288,10 @@ class GameBoard {
             return;
         }
 
-        if (Date.now() - this.arrowShowTime > 3000) {
-            this.arrows.splice(0, this.arrows.length);
-            return;
-        }
-
         ctx.save();
         
-        // Fade out arrow as it expires (hold full opacity for 2s, then fade over 1s)
-        const elapsed = Date.now() - this.arrowShowTime;
-        const alpha = Math.max(0, 1 - Math.max(0, elapsed - 2000) / 1000);
+        // Hold full opacity until cleared on click
+        const alpha = 1;
         ctx.globalAlpha = alpha;
 
         // Setup glow effect
@@ -1048,6 +1042,7 @@ class GameBoard {
         let [x1, y1] = board.coordToPos(board_row, board_col);
 
         this.have_hint = false;
+        this.arrows.splice(0, this.arrows.length);
         board.dst_tile = -1;
         if (board.src_tile == -1) {
             if (tile == TILE.active) {
