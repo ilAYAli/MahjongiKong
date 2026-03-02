@@ -1272,7 +1272,7 @@ class GameBoard {
 
 function getSpriteIndex(idx)
 {
-    if (idx < 0 || idx > 1)
+    if (idx < 0 || idx > 4)
         idx = 0;
 
     switch (idx) {
@@ -1302,8 +1302,8 @@ function getSpriteIndex(idx)
 
         case 2: {
             let ss = new SpriteSheet(
-                84, 84,
-                8, 4,
+                96, 96,
+                4, 8,
                 'assets/pieces.png',
                 'assets/pieces.png'
             );
@@ -1313,12 +1313,24 @@ function getSpriteIndex(idx)
 
         case 3: {
             let ss = new SpriteSheet(
-                48, 64,
-                4, 16,
+                225, 252,
+                5, 13,
                 'assets/cards.jpg',
                 'assets/cards.jpg'
             );
-            ss.empty_tile = 15;
+            ss.empty_tile = 64;
+            return ss;
+        }
+
+        case 4: {
+            let ss = new SpriteSheet(
+                64, 64,
+                5, 10,
+                'assets/deck_mahjong_neon_0.png',
+                'assets/deck_mahjong_neon_light_0.png'
+            );
+            ss.empty_tile = 38; // 38: invisible, 49: block
+            ss.unused_tiles = [ 38, 39, 48, 49 ];
             return ss;
         }
     }
