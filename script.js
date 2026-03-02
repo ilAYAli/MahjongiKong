@@ -1437,7 +1437,7 @@ function updateScoreCanvas(timer)
 
     // Scale backing store for HiDPI/retina so text is crisp
     const dpr = window.devicePixelRatio || 1;
-    const cssW = 110, cssH = 36;
+    const cssW = 110, cssH = 22;
     if (canvas.width !== cssW * dpr || canvas.height !== cssH * dpr) {
         canvas.width  = cssW * dpr;
         canvas.height = cssH * dpr;
@@ -1450,12 +1450,12 @@ function updateScoreCanvas(timer)
     ctx.textAlign = 'center';
 
     // Score number
-    ctx.font = "bold 22px 'Juice Avocado', Arial, sans-serif";
+    ctx.font = "bold 16px 'Juice Avocado', Arial, sans-serif";
     ctx.fillStyle = "#fff";
     ctx.shadowColor = 'rgba(200, 190, 255, 0.9)';
     ctx.shadowBlur = 14;
     ctx.textBaseline = 'alphabetic';
-    ctx.fillText(board.totalScore.toLocaleString(), cssW / 2, 24);
+    ctx.fillText(board.totalScore.toLocaleString(), cssW / 2, 17);
     ctx.shadowBlur = 0;
 
     next_hint--;

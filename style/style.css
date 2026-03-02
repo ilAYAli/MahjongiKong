@@ -60,7 +60,7 @@ body {
     align-items: center;
     justify-content: center;
     background: linear-gradient(180deg, #8577ef 0%, #6c5ce7 50%, #5a4bd1 100%);
-    padding: 2px 15px;
+    padding: 13px 22px;
     border-radius: 10px;
     box-shadow:
         0 1px 0 rgba(255,255,255,0.25) inset,
@@ -68,7 +68,6 @@ body {
         0 5px 0 #3d2fa8,
         0 7px 12px rgba(0,0,0,0.4);
     min-width: 100px;
-    height: auto;
     width: fit-content;
 }
 
