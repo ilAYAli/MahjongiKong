@@ -661,8 +661,7 @@ class GameBoard {
                     const pointsAwarded = Math.round(1000 - (900 * (clampedTime - 1) / 29));
                     this.totalScore += pointsAwarded;
                     this.lastMatchTime = Date.now();
-
-                    const [r, c] = this.idxToCoord(t1);
+                    updateTimeBar();
                     this.animations.push({
                         type: 'points',
                         x: r * this.tile_width + this.tile_width/2,
@@ -828,6 +827,7 @@ class GameBoard {
             // no canvas overlay — UI is in DOM banner
         }
 
+        updateTimeBar();
         cancelAnimationFrame(this._rafId);
         this._rafId = requestAnimationFrame(() => this.draw(ctx));
     }
@@ -1155,7 +1155,7 @@ class GameBoard {
                         this.hintedMove = false;
                         this.totalScore += pointsAwarded;
                         this.lastMatchTime = Date.now();
-
+                        updateTimeBar();
                         this.animations.push({
                             type: 'points',
                             x: xpos,
@@ -1427,7 +1427,6 @@ function triggerPenalty() {
 var board = new GameBoard(12, 16, getSpriteIndex(spriteIdx));
 timer.init((t) => {
     updateScoreCanvas(t);
-    updateTimeBar();
 });
 
 var next_hint = DEFAULT_TIMEOUT;
