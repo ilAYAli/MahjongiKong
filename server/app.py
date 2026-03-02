@@ -41,12 +41,18 @@ def get_conn():
             name       TEXT    PRIMARY KEY,
             score      INTEGER NOT NULL,
             updated_at TEXT    NOT NULL,
-            board_url  TEXT
+            board_url  TEXT,
+            hints      INTEGER NOT NULL DEFAULT 0
         )
     """)
     # migrate existing DBs that don't have board_url yet
     try:
         conn.execute("ALTER TABLE scores ADD COLUMN board_url TEXT")
+    except Exception:
+        pass
+    # migrate existing DBs that don't have hints yet
+    try:
+        conn.execute("ALTER TABLE scores ADD COLUMN hints INTEGER NOT NULL DEFAULT 0")
     except Exception:
         pass
     conn.commit()
@@ -137,7 +143,7 @@ class Handler(BaseHTTPRequestHandler):
             with _db_lock:
                 conn = get_conn()
                 rows = conn.execute(
-                    "SELECT name, score, updated_at AS date, board_url FROM scores ORDER BY score DESC LIMIT ?",
+                    "SELECT name, score, updated_at AS date, board_url, hints FROM scores ORDER BY score DESC LIMIT ?",
                     (TOP_N,)
                 ).fetchall()
                 conn.close()
@@ -188,6 +194,10 @@ class Handler(BaseHTTPRequestHandler):
         board_url = data.get("board_url")
         if not isinstance(board_url, str) or len(board_url) > 2048:
             board_url = None
+        try:
+            hints = max(0, min(200, int(data.get("hints", 0))))
+        except (TypeError, ValueError):
+            hints = 0
 
         if not name:
             self._send_json(400, {"error": f"Invalid name (1-{MAX_NAME} printable ASCII chars)."})
@@ -200,12 +210,13 @@ class Handler(BaseHTTPRequestHandler):
         with _db_lock:
             conn = get_conn()
             conn.execute("""
-                INSERT INTO scores (name, score, updated_at, board_url) VALUES (?, ?, ?, ?)
+                INSERT INTO scores (name, score, updated_at, board_url, hints) VALUES (?, ?, ?, ?, ?)
                 ON CONFLICT(name) DO UPDATE SET
                   score      = CASE WHEN excluded.score > scores.score THEN excluded.score ELSE scores.score END,
                   updated_at = CASE WHEN excluded.score > scores.score THEN excluded.updated_at ELSE scores.updated_at END,
-                  board_url  = CASE WHEN excluded.score > scores.score THEN excluded.board_url ELSE scores.board_url END
-            """, (name, score, date, board_url))
+                  board_url  = CASE WHEN excluded.score > scores.score THEN excluded.board_url ELSE scores.board_url END,
+                  hints      = CASE WHEN excluded.score > scores.score THEN excluded.hints ELSE scores.hints END
+            """, (name, score, date, board_url, hints))
             conn.commit()
             rank = conn.execute(
                 "SELECT COUNT(*) FROM scores WHERE score > ?", (score,)

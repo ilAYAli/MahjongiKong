@@ -256,6 +256,7 @@ class GameBoard {
         this.pulse = 0;
         this.hoverIdx = -1;
         this.totalScore = 0;
+        this.hintCount = 0;
         this.lastMatchTime = Date.now();
         updateTimeBar(0);
         this.arrowShowTime = 0;
@@ -1008,12 +1009,13 @@ class GameBoard {
 
         if (interactive) {
             if (status != SOLVED.none) {
+                this.hintCount++;
                 timer.elapsed += 60;
                 triggerPenalty();
             }
             else {
                 alert("no moves found, shuffling..");
-                this.shuffle();
+                this.shuffle(false); // free — forced by board state
             }
             this.unselectAll();
         }
@@ -1116,7 +1118,7 @@ class GameBoard {
 
                         const remaining_pices = this.#getNumActiveTiles();
                         if (!remaining_pices) {
-                            gameOver(timer.elapsed, board.totalScore);
+                            gameOver(timer.elapsed, board.totalScore, board.hintCount);
                             board.init();
                             return;
                         }
@@ -1155,6 +1157,7 @@ class GameBoard {
         board.arrows = [];
         board.score = 0;
         this.totalScore = 0;
+        this.hintCount = 0;
         this.lastMatchTime = Date.now();
         updateTimeBar(0);
 

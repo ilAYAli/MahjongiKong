@@ -65,16 +65,20 @@ async function loadHighscore() {
         scoreEl.className = "hs-score";
         scoreEl.textContent = row.score.toLocaleString() + " pts";
 
+        const hintsEl = document.createElement("span");
+        hintsEl.className = "hs-hints";
+        hintsEl.textContent = row.hints > 0 ? `${row.hints}\u{1F4A1}` : "";
+
         const dateEl = document.createElement("span");
         dateEl.className = "hs-date";
         dateEl.textContent = row.date;
 
-        a.append(rankEl, nameEl, scoreEl, dateEl);
+        a.append(rankEl, nameEl, scoreEl, hintsEl, dateEl);
         div.appendChild(a);
     });
 }
 
-async function gameOver(elapsed, totalScore) {
+async function gameOver(elapsed, totalScore, hints = 0) {
     return new Promise((resolve) => {
         const modal    = document.getElementById("hs-modal");
         const scoreEl  = document.getElementById("hs-modal-score");
@@ -101,7 +105,7 @@ async function gameOver(elapsed, totalScore) {
                 const resp = await fetch(`${API_BASE}/highscores`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ name, score: totalScore, board_url: board_qs }),
+                    body: JSON.stringify({ name, score: totalScore, board_url: board_qs, hints }),
                 });
                 const text = await resp.text();
                 result = text ? JSON.parse(text) : {};
