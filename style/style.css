@@ -298,25 +298,28 @@ body.view-mode #board_div { margin-top: 0; }
 
 #view-banner {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    padding: 8px 16px 6px;
+    justify-content: center;
+    gap: 4px;
+    padding: 10px 16px 8px;
 }
 
 #view-banner span {
     font-family: 'Juice Avocado', sans-serif;
-    font-size: 20px;
     letter-spacing: 2px;
+    text-align: center;
 }
 
 #view-banner span:first-child {
+    font-size: 22px;
     color: #ffd700;
     text-shadow: 0 0 12px rgba(255,215,0,0.4);
 }
 
 #view-back {
     color: rgba(162,155,254,0.7);
-    font-size: 15px !important;
+    font-size: 14px !important;
     cursor: pointer;
 }
 
