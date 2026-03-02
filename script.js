@@ -277,10 +277,18 @@ class GameBoard {
             return;
         }
 
+        // Demo: fast 500ms fade (the "electric" flash). Interactive: hold until click.
+        let alpha = 1;
+        if (this.demo_mode) {
+            const elapsed = Date.now() - this.arrowShowTime;
+            if (elapsed > 500) {
+                this.arrows.length = 0;
+                return;
+            }
+            alpha = Math.max(0, 1 - elapsed / 500);
+        }
+
         ctx.save();
-        
-        // Hold full opacity until cleared on click
-        const alpha = 1;
         ctx.globalAlpha = alpha;
 
         // Setup glow effect
