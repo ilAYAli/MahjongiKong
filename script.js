@@ -1456,6 +1456,8 @@ function demo(activate = true, delay = 1000) {
         board.draw_arrows = true;
         board.totalScore = 0;
         document.getElementById('score_div').style.visibility = 'hidden';
+        const btn = document.getElementById('demoBtn');
+        if (btn) { btn.textContent = 'Demo ON'; btn.style.outline = '2px solid rgba(200,190,255,0.7)'; }
         demoId = setInterval(() => {
             const status = board.hint(false);
             switch (status) {
@@ -1464,6 +1466,7 @@ function demo(activate = true, delay = 1000) {
                     clearInterval(demoId);
                     board.demo_mode = false;
                     document.getElementById('score_div').style.visibility = '';
+                    { const btn = document.getElementById('demoBtn'); if (btn) { btn.textContent = 'Demo'; btn.style.outline = ''; } }
                     break;
                 case SOLVED.all:
                     console.log("board solved, resarting");
@@ -1480,6 +1483,8 @@ function demo(activate = true, delay = 1000) {
         board.demo_mode = false;
         board.init();
         document.getElementById('score_div').style.visibility = '';
+        const btn = document.getElementById('demoBtn');
+        if (btn) { btn.textContent = 'Demo'; btn.style.outline = ''; }
 
         if (!demoId)
             return;

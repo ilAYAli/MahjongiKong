@@ -29,13 +29,7 @@
               <a href=".?spriteIdx=1">Chess</a>
             </div>
           </div>
-          <div class="dropdown">
-            <button id="demoId" class="dropbtn">Demo</button>
-            <div class="dropdown-content">
-              <a href="#" onclick="demo(true)">On</a>
-              <a href="#" onclick="demo(false)">Off</a>
-            </div>
-          </div>
+          <button id="demoBtn" class="dropbtn" onclick="demo(!board.demo_mode)">Demo</button>
           <div class="dropdown">
             <button id="highscore" class="dropbtn">Highscore</button>
             <div id="highscore_div" class="dropdown-content">
