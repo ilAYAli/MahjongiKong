@@ -275,23 +275,36 @@ class GameBoard {
 
     // Draw a jagged lightning segment between (x1,y1) and (x2,y2)
     #lightningSegment(ctx, x1, y1, x2, y2, jitter, seed) {
-        const steps = Math.max(3, Math.round(Math.hypot(x2 - x1, y2 - y1) / 12));
+        const dist  = Math.hypot(x2 - x1, y2 - y1);
+        const steps = Math.max(5, Math.round(dist / 8));
         const dx = x2 - x1, dy = y2 - y1;
-        const nx = -dy / Math.hypot(dx, dy) || 0;  // normal
-        const ny =  dx / Math.hypot(dx, dy) || 0;
-        // deterministic-ish random from seed so it doesn't shimmer every frame
-        const rng = (i) => Math.sin(seed * 127.1 + i * 311.7) * 0.5 + 0.5;
+        const len = Math.hypot(dx, dy) || 1;
+        const nx = -dy / len;  // perpendicular
+        const ny =  dx / len;
+        const tx =  dx / len;  // tangential
+        const ty =  dy / len;
+        // Two chaotic seeded RNGs
+        const rng  = (i) => Math.abs((Math.sin(seed * 127.1 + i * 311.7) * 43758.5) % 1);
+        const rng2 = (i) => Math.abs((Math.sin(seed * 251.3 + i * 137.9) * 31415.9) % 1);
+        const pts = [[x1, y1]];
         ctx.beginPath();
         ctx.moveTo(x1, y1);
         for (let i = 1; i < steps; i++) {
-            const t  = i / steps;
-            const px = x1 + dx * t;
-            const py = y1 + dy * t;
-            const off = (rng(i) - 0.5) * 2 * jitter;
-            ctx.lineTo(px + nx * off, py + ny * off);
+            const t    = i / steps;
+            const px   = x1 + dx * t;
+            const py   = y1 + dy * t;
+            // Occasional spike: ~20% of points deviate 2.5x further
+            const mag  = rng(i) < 0.20 ? jitter * 2.5 : jitter;
+            const perp = (rng(i)  - 0.5) * 2 * mag;
+            const tang = (rng2(i) - 0.5) * jitter * 0.5;
+            const qx   = px + nx * perp + tx * tang;
+            const qy   = py + ny * perp + ty * tang;
+            pts.push([qx, qy]);
+            ctx.lineTo(qx, qy);
         }
         ctx.lineTo(x2, y2);
         ctx.stroke();
+        return pts;  // return points so caller can add forks
     }
 
     #drawArrowPath(ctx) {
@@ -334,8 +347,9 @@ class GameBoard {
         ctx.strokeStyle = '#6c5ce7';
         ctx.shadowBlur  = 18;
         ctx.shadowColor = '#a29bfe';
+        const glowPts = [];
         for (let i = 0; i < pts.length - 1; i++) {
-            this.#lightningSegment(ctx, pts[i][0], pts[i][1], pts[i+1][0], pts[i+1][1], 3, seed + i * 17);
+            glowPts.push(this.#lightningSegment(ctx, pts[i][0], pts[i][1], pts[i+1][0], pts[i+1][1], 3, seed + i * 17));
         }
 
         // Pass 2 — thin bright core
@@ -346,6 +360,34 @@ class GameBoard {
         for (let i = 0; i < pts.length - 1; i++) {
             this.#lightningSegment(ctx, pts[i][0], pts[i][1], pts[i+1][0], pts[i+1][1], 2, seed + i * 17);
         }
+
+        // Pass 3 — short random fork branches off the glow path
+        const forkRng = (n) => Math.abs((Math.sin(seed * 83.7 + n * 193.1) * 29341.6) % 1);
+        ctx.lineWidth   = 1.5;
+        ctx.strokeStyle = 'rgba(200,190,255,0.55)';
+        ctx.shadowBlur  = 8;
+        ctx.shadowColor = '#a29bfe';
+        glowPts.forEach((segPts, si) => {
+            if (!segPts || segPts.length < 3) return;
+            // pick 1-2 fork origins per segment
+            const numForks = forkRng(si * 5) < 0.5 ? 1 : 2;
+            for (let f = 0; f < numForks; f++) {
+                const pickIdx = 1 + Math.floor(forkRng(si * 7 + f * 3) * (segPts.length - 2));
+                const [fx, fy] = segPts[pickIdx];
+                const forkLen  = 12 + forkRng(si * 11 + f) * 28;
+                const angle    = forkRng(si * 13 + f * 7) * Math.PI * 2;
+                const ex = fx + Math.cos(angle) * forkLen;
+                const ey = fy + Math.sin(angle) * forkLen;
+                ctx.beginPath();
+                ctx.moveTo(fx, fy);
+                // one midpoint wobble
+                const mx = (fx + ex) / 2 + (forkRng(si * 19 + f) - 0.5) * 10;
+                const my = (fy + ey) / 2 + (forkRng(si * 23 + f) - 0.5) * 10;
+                ctx.lineTo(mx, my);
+                ctx.lineTo(ex, ey);
+                ctx.stroke();
+            }
+        });
 
         ctx.restore();
     }
