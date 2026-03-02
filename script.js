@@ -245,6 +245,7 @@ class GameBoard {
         this.lastMatchTime = Date.now();
         updateTimeBar(0);
         this.arrowShowTime = 0;
+        this._rafId = null;
     }
 
 // private:
@@ -560,23 +561,24 @@ class GameBoard {
                 this.animations.push({ type: 'pop', idx: t1, tile_idx: t1_idx, start: Date.now(), duration: 500 });
                 this.animations.push({ type: 'pop', idx: t2, tile_idx: t2_idx, start: Date.now(), duration: 500 });
                 
-                // Calculate points based on time since last match
-                const timeSinceLast = (Date.now() - this.lastMatchTime) / 1000;
-                const basePoints = 100;
-                const speedBonus = Math.max(0, 10 - Math.floor(timeSinceLast)) * 20;
-                const pointsAwarded = basePoints + speedBonus;
-                this.totalScore += pointsAwarded;
-                this.lastMatchTime = Date.now();
+                // Only accumulate score in non-demo (real player) play
+                if (!this.demo_mode) {
+                    const timeSinceLast = (Date.now() - this.lastMatchTime) / 1000;
+                    const clampedTime = Math.max(1, Math.min(30, timeSinceLast));
+                    const pointsAwarded = Math.round(1000 - (900 * (clampedTime - 1) / 29));
+                    this.totalScore += pointsAwarded;
+                    this.lastMatchTime = Date.now();
 
-                const [r, c] = this.idxToCoord(t1);
-                this.animations.push({
-                    type: 'points',
-                    x: r * this.tile_width + this.tile_width/2,
-                    y: c * this.tile_height + this.tile_height/2,
-                    points: pointsAwarded,
-                    start: Date.now(),
-                    duration: 1000
-                });
+                    const [r, c] = this.idxToCoord(t1);
+                    this.animations.push({
+                        type: 'points',
+                        x: r * this.tile_width + this.tile_width/2,
+                        y: c * this.tile_height + this.tile_height/2,
+                        points: pointsAwarded,
+                        start: Date.now(),
+                        duration: 1000
+                    });
+                }
 
                 this.tiles[t1][1] = TILE.dead;
                 this.tiles[t2][1] = TILE.dead;
@@ -697,8 +699,9 @@ class GameBoard {
 
         this.#drawArrowPath(ctx);
         this.#drawAnimations(ctx);
-        
-        requestAnimationFrame(() => this.draw(ctx));
+
+        cancelAnimationFrame(this._rafId);
+        this._rafId = requestAnimationFrame(() => this.draw(ctx));
     }
 
     posToBoardIdx(x, y) {
@@ -868,6 +871,7 @@ class GameBoard {
                     continue;
                 }
 
+                this.arrowShowTime = Date.now(); // start the arrow fade-out timer
                 return SOLVED.one;
             }
         }
@@ -981,6 +985,7 @@ class GameBoard {
                         board.tiles[board.dst_tile] = [dst_tile_idx, TILE.active]
                     } else {
                         // Success! Trigger animations
+                        board.arrowShowTime = Date.now(); // start the arrow fade-out timer
                         const [src_idx, src_state] = board.tiles[board.src_tile];
                         const [dst_idx, dst_state] = board.tiles[board.dst_tile];
                         
@@ -1001,9 +1006,8 @@ class GameBoard {
                         
                         // Calculate points based on time since last match
                         const timeSinceLast = (Date.now() - this.lastMatchTime) / 1000;
-                        const basePoints = 100;
-                        const speedBonus = Math.max(0, 10 - Math.floor(timeSinceLast)) * 20;
-                        const pointsAwarded = basePoints + speedBonus;
+                        const clampedTime = Math.max(1, Math.min(30, timeSinceLast));
+                        const pointsAwarded = Math.round(1000 - (900 * (clampedTime - 1) / 29));
                         this.totalScore += pointsAwarded;
                         this.lastMatchTime = Date.now();
 
@@ -1295,6 +1299,7 @@ function demo(activate = true, delay = 1000) {
         //timer.stop();
         board.demo_mode = true;
         board.draw_arrows = true;
+        board.totalScore = 0;
         demoId = setInterval(() => {
             const status = board.hint(false);
             switch (status) {
