@@ -1380,21 +1380,28 @@ const timer = {
 };
 
 
-function getTimeBarColor(elapsed) {
-    const maxTime = 900;
-    const progress = Math.min(elapsed / maxTime, 1);
-    const hue = Math.round(120 * (1 - progress));
-    const lit = progress > 0.66 ? 42 : 50;
+function getTimeBarColor(progress) {
+    const hue = Math.round(120 * progress);
+    const lit = progress < 0.34 ? 42 : 50;
     return `hsl(${hue}, 90%, ${lit}%)`;
 }
 
-function updateTimeBar(elapsed) {
+function updateTimeBar() {
     const bar = document.getElementById('time-bar');
     if (!bar) return;
-    const maxTime = 900;
-    const percentage = Math.min((elapsed / maxTime) * 100, 100);
-    bar.style.width = percentage + "%";
-    const color = getTimeBarColor(elapsed);
+    const lastMatch = (typeof board !== 'undefined') ? board.lastMatchTime : Date.now();
+    if ((typeof board !== 'undefined') && board.hintedMove) {
+        bar.style.width = '0%';
+        bar.style.background = 'rgba(180,180,180,0.35)';
+        bar.style.boxShadow = 'none';
+        return;
+    }
+    const timeSinceLast = (Date.now() - lastMatch) / 1000;
+    const clampedTime = Math.max(1, Math.min(30, timeSinceLast));
+    const nextPoints = Math.round(1000 - (900 * (clampedTime - 1) / 29));
+    const progress = (nextPoints - 100) / 900;  // 1.0 = 1000pts, 0.0 = 100pts
+    bar.style.width = (progress * 100) + '%';
+    const color = getTimeBarColor(progress);
     bar.style.background = color;
     bar.style.boxShadow = `0 0 12px ${color}`;
 }
@@ -1413,16 +1420,15 @@ function triggerPenalty() {
     scoreDiv.classList.add('penalty');
     
     setTimeout(() => {
-        updateTimeBar(timer.elapsed);
+        updateTimeBar();
     }, 500);
 }
 
 var board = new GameBoard(12, 16, getSpriteIndex(spriteIdx));
 timer.init((t) => {
     updateScoreCanvas(t);
-    updateTimeBar(t.elapsed);
+    updateTimeBar();
 });
-
 
 var next_hint = DEFAULT_TIMEOUT;
 function updateScoreCanvas(timer)
@@ -1432,7 +1438,7 @@ function updateScoreCanvas(timer)
 
     // Scale backing store for HiDPI/retina so text is crisp
     const dpr = window.devicePixelRatio || 1;
-    const cssW = 110, cssH = 52;
+    const cssW = 110, cssH = 36;
     if (canvas.width !== cssW * dpr || canvas.height !== cssH * dpr) {
         canvas.width  = cssW * dpr;
         canvas.height = cssH * dpr;
@@ -1452,23 +1458,6 @@ function updateScoreCanvas(timer)
     ctx.textBaseline = 'alphabetic';
     ctx.fillText(board.totalScore.toLocaleString(), cssW / 2, 24);
     ctx.shadowBlur = 0;
-
-    // Bonus countdown — show next match point value, colour shifts as time runs out
-    if (!board.demo_mode) {
-        const timeSinceLast = (Date.now() - board.lastMatchTime) / 1000;
-        const clampedTime = Math.max(1, Math.min(30, timeSinceLast));
-        const nextPoints = board.hintedMove ? 0 : Math.round(1000 - (900 * (clampedTime - 1) / 29));
-        const pulse = !board.hintedMove && clampedTime > 20 ? 0.75 + 0.25 * Math.sin(Date.now() / 150) : 1;
-        ctx.globalAlpha = pulse;
-        ctx.font = "bold 15px 'Juice Avocado', Arial, sans-serif";
-        ctx.fillStyle = board.hintedMove ? 'rgba(180,180,180,0.7)' : '#fff';
-        ctx.shadowColor = board.hintedMove ? 'rgba(180,180,180,0.4)' : 'rgba(200, 190, 255, 0.9)';
-        ctx.shadowBlur = 10;
-        ctx.textBaseline = 'alphabetic';
-        ctx.fillText(`NEXT +${nextPoints}`, cssW / 2, cssH - 8);
-        ctx.shadowBlur = 0;
-        ctx.globalAlpha = 1;
-    }
 
     next_hint--;
     if (next_hint <= 0) {
