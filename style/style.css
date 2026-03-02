@@ -72,7 +72,27 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.1);
     width: 100%;
     display: flex;
+    flex-direction: column; /* Stack bar above canvas */
     justify-content: center;
+}
+
+#time-bar-container {
+    width: 100%;
+    height: 3px;
+    background: rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 5;
+}
+
+#time-bar {
+    width: 0%;
+    height: 100%;
+    background: #a29bfe;
+    box-shadow: 0 0 10px #6c5ce7;
+    transition: width 1s linear, background-color 0.3s;
 }
 
 #board_div canvas {
@@ -232,7 +252,7 @@ canvas {
     }
 
     .dropbtn { padding: 8px 12px; font-size: 12px; }
-    #score_div { height: 32px; }
+    #score_div { height: 38px; }
 }
 
 .penalty {

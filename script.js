@@ -243,6 +243,7 @@ class GameBoard {
         this.hoverIdx = -1;
         this.totalScore = 0;
         this.lastMatchTime = Date.now();
+        updateTimeBar(0);
     }
 
 // private:
@@ -1054,6 +1055,7 @@ class GameBoard {
         board.score = 0;
         this.totalScore = 0;
         this.lastMatchTime = Date.now();
+        updateTimeBar(0);
 
         if (levelParam) {
             console.log("using provided level");
@@ -1211,15 +1213,35 @@ const timer = {
 };
 
 
+function updateTimeBar(elapsed) {
+    const bar = document.getElementById('time-bar');
+    if (!bar) return;
+    // Assume 15 minutes (900s) is the 100% width goal
+    const maxTime = 900;
+    const percentage = Math.min((elapsed / maxTime) * 100, 100);
+    bar.style.width = percentage + "%";
+}
+
 function triggerPenalty() {
     const scoreDiv = document.getElementById('score_div');
+    const timeBar = document.getElementById('time-bar');
+    
     scoreDiv.classList.remove('penalty');
+    if (timeBar) timeBar.style.backgroundColor = '#ff4757';
+    
     void scoreDiv.offsetWidth; // Trigger reflow
     scoreDiv.classList.add('penalty');
+    
+    setTimeout(() => {
+        if (timeBar) timeBar.style.backgroundColor = '#a29bfe';
+    }, 500);
 }
 
 var board = new GameBoard(12, 16, getSpriteIndex(spriteIdx));
-timer.init(updateScoreCanvas);
+timer.init((t) => {
+    updateScoreCanvas(t);
+    updateTimeBar(t.elapsed);
+});
 
 
 var next_hint = DEFAULT_TIMEOUT;
@@ -1237,17 +1259,7 @@ function updateScoreCanvas(timer)
     // Draw Score (Primary)
     ctx.font = font_size + "px Arial, sans-serif";
     ctx.fillStyle = "#fff";
-    ctx.fillText(board.totalScore.toLocaleString(), canvas.width / 2, canvas.height / 2 - 5);
-
-    // Draw Time (Subtle/Secondary)
-    const date = new Date(timer.elapsed * 1000);
-    const timeStr = timer.elapsed >= 3600 
-        ? date.toISOString().slice(11, 19) 
-        : date.toISOString().slice(14, 19);
-    
-    ctx.font = "12px Arial, sans-serif";
-    ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
-    ctx.fillText(timeStr, canvas.width / 2, canvas.height - 10);
+    ctx.fillText(board.totalScore.toLocaleString(), canvas.width / 2, canvas.height / 2 + 1);
 
     next_hint--;
     if (next_hint <= 0) {
