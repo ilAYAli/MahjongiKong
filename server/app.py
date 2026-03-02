@@ -83,6 +83,11 @@ def validate_score(raw):
     return n if 1 <= n <= MAX_SCORE else None
 
 # ---------------------------------------------------------------------------
+# Static file root (local dev only)
+# ---------------------------------------------------------------------------
+_GAME_ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+
+# ---------------------------------------------------------------------------
 # Request handler
 # ---------------------------------------------------------------------------
 class Handler(BaseHTTPRequestHandler):
@@ -132,7 +137,31 @@ class Handler(BaseHTTPRequestHandler):
                 conn.close()
             self._send_json(200, [dict(r) for r in rows])
         else:
-            self._send_json(404, {"error": "Not found"})
+            # Serve static game files for local dev
+            path = self.path.split("?")[0]
+            if path == "/":
+                path = "/index.html"
+            file_path = os.path.normpath(os.path.join(_GAME_ROOT, path.lstrip("/")))
+            # Safety: don't escape game root
+            if not file_path.startswith(os.path.abspath(_GAME_ROOT)):
+                self._send_json(403, {"error": "Forbidden"})
+                return
+            if os.path.isfile(file_path):
+                ext = os.path.splitext(file_path)[1]
+                mime = {
+                    ".html": "text/html", ".js": "application/javascript",
+                    ".css": "text/css",   ".png": "image/png",
+                    ".jpg": "image/jpeg", ".svg": "image/svg+xml",
+                    ".ico": "image/x-icon",
+                }.get(ext, "application/octet-stream")
+                data = open(file_path, "rb").read()
+                self.send_response(200)
+                self.send_header("Content-Type", mime)
+                self.send_header("Content-Length", len(data))
+                self.end_headers()
+                self.wfile.write(data)
+            else:
+                self._send_json(404, {"error": "Not found"})
 
     def do_POST(self):
         if self.path != "/api/highscores":

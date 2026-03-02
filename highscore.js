@@ -31,10 +31,28 @@ async function loadHighscore() {
     rows.forEach((row, i) => {
         const a = document.createElement("a");
         a.href = "#";
-        const rank  = `#${i + 1}`.padEnd(3);
-        const name  = row.name.padEnd(20);
-        const score = row.score.toLocaleString().padStart(7);
-        a.textContent = `${rank}  ${name}  ${score} pts  ${row.date}`;
+        if (i === 0) a.className = "hs-gold";
+        else if (i === 1) a.className = "hs-silver";
+        else if (i === 2) a.className = "hs-bronze";
+
+        const medals = ["🥇", "🥈", "🥉"];
+        const rankEl = document.createElement("span");
+        rankEl.className = "hs-rank";
+        rankEl.textContent = medals[i] ?? `#${i + 1}`;
+
+        const nameEl = document.createElement("span");
+        nameEl.className = "hs-name";
+        nameEl.textContent = row.name;
+
+        const scoreEl = document.createElement("span");
+        scoreEl.className = "hs-score";
+        scoreEl.textContent = row.score.toLocaleString() + " pts";
+
+        const dateEl = document.createElement("span");
+        dateEl.className = "hs-date";
+        dateEl.textContent = row.date;
+
+        a.append(rankEl, nameEl, scoreEl, dateEl);
         div.appendChild(a);
     });
 }
