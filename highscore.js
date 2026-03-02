@@ -51,7 +51,7 @@ async function loadHighscore() {
             const link = document.createElement("a");
             const qs   = row.board_url.startsWith("?") ? row.board_url : row.board_url.slice(row.board_url.indexOf("?"));
             const sep  = qs.includes("view=") ? "&" : (qs + "&view=1").slice(qs.length);
-            link.href = location.origin + location.pathname + qs + "&view=1";
+            link.href = location.origin + location.pathname + qs + "&view=1&player=" + encodeURIComponent(row.name);
             link.textContent = row.name;
             link.style.color = "inherit";
             link.style.textDecoration = "underline";
