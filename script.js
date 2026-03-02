@@ -241,6 +241,8 @@ class GameBoard {
         this.animations = [];
         this.pulse = 0;
         this.hoverIdx = -1;
+        this.totalScore = 0;
+        this.lastMatchTime = Date.now();
     }
 
 // private:
@@ -548,11 +550,20 @@ class GameBoard {
                 this.animations.push({ type: 'pop', idx: t1, tile_idx: t1_idx, start: Date.now(), duration: 500 });
                 this.animations.push({ type: 'pop', idx: t2, tile_idx: t2_idx, start: Date.now(), duration: 500 });
                 
+                // Calculate points based on time since last match
+                const timeSinceLast = (Date.now() - this.lastMatchTime) / 1000;
+                const basePoints = 100;
+                const speedBonus = Math.max(0, 10 - Math.floor(timeSinceLast)) * 20;
+                const pointsAwarded = basePoints + speedBonus;
+                this.totalScore += pointsAwarded;
+                this.lastMatchTime = Date.now();
+
                 const [r, c] = this.idxToCoord(t1);
                 this.animations.push({
                     type: 'points',
                     x: r * this.tile_width + this.tile_width/2,
                     y: c * this.tile_height + this.tile_height/2,
+                    points: pointsAwarded,
                     start: Date.now(),
                     duration: 1000
                 });
@@ -613,7 +624,7 @@ class GameBoard {
                 ctx.fillStyle = `rgba(162, 155, 254, ${1 - progress})`;
                 ctx.font = "bold 24px Arial";
                 ctx.textAlign = 'center';
-                ctx.fillText("+1", anim.x, anim.y - (progress * 50));
+                ctx.fillText("+" + anim.points, anim.x, anim.y - (progress * 50));
             }
             ctx.restore();
             
@@ -979,10 +990,19 @@ class GameBoard {
                             duration: 500
                         });
                         
+                        // Calculate points based on time since last match
+                        const timeSinceLast = (Date.now() - this.lastMatchTime) / 1000;
+                        const basePoints = 100;
+                        const speedBonus = Math.max(0, 10 - Math.floor(timeSinceLast)) * 20;
+                        const pointsAwarded = basePoints + speedBonus;
+                        this.totalScore += pointsAwarded;
+                        this.lastMatchTime = Date.now();
+
                         this.animations.push({
                             type: 'points',
                             x: xpos,
                             y: ypos,
+                            points: pointsAwarded,
                             start: Date.now(),
                             duration: 1000
                         });
@@ -1032,6 +1052,8 @@ class GameBoard {
         board.tiles = [];
         board.arrows = [];
         board.score = 0;
+        this.totalScore = 0;
+        this.lastMatchTime = Date.now();
 
         if (levelParam) {
             console.log("using provided level");
@@ -1216,10 +1238,16 @@ function updateScoreCanvas(timer)
 
     const date = new Date(timer.elapsed * 1000);
     const timeStr = timer.elapsed >= 3600 
-        ? date.toISOString().slice(11, 19) // HH:MM:SS
-        : date.toISOString().slice(14, 19); // MM:SS
+        ? date.toISOString().slice(11, 19) 
+        : date.toISOString().slice(14, 19);
 
-    ctx.fillText(timeStr, canvas.width / 2, canvas.height / 2 + 1); // +1 for visual balance with Arial baseline
+    // Draw Time
+    ctx.textAlign = 'left';
+    ctx.fillText(timeStr, 15, canvas.height / 2 + 1);
+
+    // Draw Score
+    ctx.textAlign = 'right';
+    ctx.fillText(board.totalScore.toLocaleString(), canvas.width - 15, canvas.height / 2 + 1);
 
     next_hint--;
     if (next_hint <= 0) {
