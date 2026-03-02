@@ -32,25 +32,7 @@ _db_lock = threading.Lock()
 # ---------------------------------------------------------------------------
 os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
 
-def _migrate_name_case(conn):
-    """One-time migration: normalize all existing names to Capitalize form,
-    merging duplicates by keeping the highest score."""
-    rows = conn.execute(
-        "SELECT name, score, updated_at, board_url, hints FROM scores"
-    ).fetchall()
-    best = {}
-    for row in rows:
-        norm = row["name"].strip().capitalize()
-        if norm not in best or row["score"] > best[norm]["score"]:
-            best[norm] = dict(row)
-    if any(dict(r)["name"] != dict(r)["name"].strip().capitalize() for r in rows):
-        conn.execute("DELETE FROM scores")
-        for norm_name, d in best.items():
-            conn.execute(
-                "INSERT INTO scores (name, score, updated_at, board_url, hints) VALUES (?, ?, ?, ?, ?)",
-                (norm_name, d["score"], d["updated_at"], d["board_url"], d["hints"]),
-            )
-        conn.commit()
+
 
 def get_conn():
     conn = sqlite3.connect(DB_PATH)
@@ -76,7 +58,6 @@ def get_conn():
     except Exception:
         pass
     conn.commit()
-    _migrate_name_case(conn)
     return conn
 
 # ---------------------------------------------------------------------------
