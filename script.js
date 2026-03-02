@@ -13,6 +13,13 @@ const spriteIdx = spriteParam ? Number(spriteParam) : 0;
 const levelParam = urlParams.get('l')
 const viewMode   = !!urlParams.get('view')
 if (viewMode) document.body.classList.add('view-mode');
+if (viewMode) {
+    canvas.addEventListener('click', () => {
+        const params = new URLSearchParams(location.search);
+        params.delete('view');
+        location.search = params.toString();
+    }, { once: true });
+}
 
 let level = 0;
 let URI;
@@ -774,11 +781,14 @@ class GameBoard {
             ctx.save();
             ctx.fillStyle = "rgba(0,0,0,0.45)";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.font = "bold 64px 'Juice Avocado', sans-serif";
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
+            ctx.font = "bold 64px 'Juice Avocado', sans-serif";
             ctx.fillStyle = "rgba(162,155,254,0.25)";
-            ctx.fillText("VIEW ONLY", canvas.width / 2, canvas.height / 2);
+            ctx.fillText("VIEW ONLY", canvas.width / 2, canvas.height / 2 - 30);
+            ctx.font = "24px 'Juice Avocado', sans-serif";
+            ctx.fillStyle = "rgba(162,155,254,0.35)";
+            ctx.fillText("click to play", canvas.width / 2, canvas.height / 2 + 30);
             ctx.restore();
         }
 
