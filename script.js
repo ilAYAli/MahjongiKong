@@ -272,17 +272,6 @@ class GameBoard {
         ctx.stroke();
     }
 
-    #drawArrowHead(ctx, x1, y1, x2, y2, filled) {
-        const dx = x2 - x1;
-        const dy = y2 - y1;
-        ctx.beginPath();
-        ctx.moveTo(x1 + 0.5 * dy, y1 - 0.5 * dx);
-        ctx.lineTo(x1 - 0.5 * dy, y1 + 0.5 * dx);
-        ctx.lineTo(x2, y2);
-        ctx.closePath();
-        filled ? ctx.fill() : ctx.stroke();
-    }
-
     #drawArrowPath(ctx) {
         if (!this.draw_arrows || this.arrows.length === 0) {
             return;
@@ -324,24 +313,6 @@ class GameBoard {
         ctx.shadowBlur = 0;
         ctx.stroke();
 
-        // Draw Arrowhead at the end
-        const last = this.arrows[this.arrows.length - 1];
-        let [lx1, ly1] = board.coordToPos(last[0], last[1]);
-        let [lx2, ly2] = board.coordToPos(last[2], last[3]);
-        lx1 += (this.tile_width/2); ly1 += (this.tile_height/2);
-        lx2 += (this.tile_width/2); ly2 += (this.tile_height/2);
-        
-        const headlen = 10;
-        const theta = Math.atan2(ly2 - ly1, lx2 - lx1);
-        
-        ctx.fillStyle = '#fff';
-        ctx.beginPath();
-        ctx.moveTo(lx2, ly2);
-        ctx.lineTo(lx2 - headlen * Math.cos(theta - Math.PI/6), ly2 - headlen * Math.sin(theta - Math.PI/6));
-        ctx.lineTo(lx2 - headlen * Math.cos(theta + Math.PI/6), ly2 - headlen * Math.sin(theta + Math.PI/6));
-        ctx.closePath();
-        ctx.fill();
-        
         ctx.restore();
     }
 
