@@ -1,62 +1,64 @@
-const NO_OF_HIGH_SCORES = 10;
-const HIGH_SCORES = 'mahgjongikong';
+const API_BASE = "/api";
 
-function loadHighscore() {
-    let div = document.getElementById("highscore_div");
+async function loadHighscore() {
+    const div = document.getElementById("highscore_div");
+    div.innerHTML = '<a href="#" style="opacity:0.5">Loading...</a>';
+
+    let rows;
+    try {
+        const resp = await fetch(`${API_BASE}/highscores`);
+        if (!resp.ok) throw new Error(resp.status);
+        rows = await resp.json();
+    } catch (_) {
+        div.innerHTML = '<a href="#">Could not load scores</a>';
+        return;
+    }
+
     div.innerHTML = '';
 
-    const jd = JSON.parse(localStorage.getItem(HIGH_SCORES)) ?? [];
-
-    if (!jd.length) {
-        let a = document.createElement("a");
-        a.textContent = "no record set";
-        a.setAttribute('href', "#");
+    if (!rows.length) {
+        const a = document.createElement("a");
+        a.textContent = "No scores yet - be first!";
+        a.href = "#";
         div.appendChild(a);
         return;
     }
 
-    jd.forEach((elt) => {
-        if (elt['elapsed']) {
-            let time = new Date(null)
-            time.setSeconds(elt['elapsed']);
-
-            let a = document.createElement("a");
-            a.textContent = String(time.toISOString().slice(14, 19) + " - " + elt['when']);
-            a.setAttribute('href', "#");
-            div.appendChild(a);
-        }
+    rows.forEach((row, i) => {
+        const a = document.createElement("a");
+        a.href = "#";
+        a.textContent = `#${i + 1}  ${row.name}  -  ${row.score.toLocaleString()} pts  (${row.date})`;
+        div.appendChild(a);
     });
 }
 
-function saveHighScore(jd, elapsed) {
-    const d = new Date();
-    const when = d.getDate() + "/" + (d.getMonth()+1) + "-" + ("0" + d.getFullYear()).slice(-2);
-    const newScore = { elapsed, when };
+async function gameOver(elapsed, totalScore) {
+    const raw = window.prompt(
+        `Board cleared!\nYour score: ${totalScore.toLocaleString()} pts\n\nEnter your name for the global highscore:`
+    );
 
-    jd.push(newScore);
-    jd.sort((a, b) => a.elapsed - b.elapsed);
-    jd.splice(NO_OF_HIGH_SCORES);
-    localStorage.setItem(HIGH_SCORES, JSON.stringify(jd));
+    const name = (raw ?? "").trim();
+    if (!name) return;
+
+    let result;
+    try {
+        const resp = await fetch(`${API_BASE}/highscores`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, score: totalScore }),
+        });
+        result = await resp.json();
+        if (!resp.ok) throw new Error(result.error ?? resp.status);
+    } catch (err) {
+        alert(`Could not save score: ${err.message}`);
+        return;
+    }
+
+    const medal = result.rank === 1 ? "Gold #1!" :
+                  result.rank === 2 ? "Silver #2!" :
+                  result.rank === 3 ? "Bronze #3!" :
+                  `#${result.rank}`;
+    alert(`Score saved! You are ${medal}`);
 
     loadHighscore();
-};
-
-function isHighScore(jd, elapsed) {
-    const slowest = jd[NO_OF_HIGH_SCORES - 1]?.elapsed ?? 1000000;
-    console.log("slowest:", slowest);
-    return elapsed < slowest;
-}
-
-function clearStorage() {
-    localStorage.clear();
-}
-
-function gameOver(elapsed) {
-    const jd = JSON.parse(localStorage.getItem(HIGH_SCORES)) ?? [];
-    if (isHighScore(jd, elapsed)) {
-        console.log("saving new time");
-        saveHighScore(jd, elapsed);
-    } else {
-        console.log("not fast enough");
-    }
 }

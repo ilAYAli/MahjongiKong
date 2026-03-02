@@ -1,0 +1,31 @@
+# /etc/systemd/system/mahjongi-kong-scores.service
+#
+# Install:
+#   sudo cp mahjongi-kong-scores.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now mahjongi-kong-scores
+
+[Unit]
+Description=MahjongiKong Score Server (gunicorn)
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/mahjongi-kong/server
+ExecStart=/var/www/mahjongi-kong/server/venv/bin/gunicorn \
+    --bind 127.0.0.1:3001 \
+    --workers 2 \
+    --access-logfile - \
+    app:app
+Restart=on-failure
+RestartSec=5
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/var/www/mahjongi-kong/server/data
+
+[Install]
+WantedBy=multi-user.target

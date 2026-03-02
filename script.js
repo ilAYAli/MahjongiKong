@@ -1098,7 +1098,7 @@ class GameBoard {
 
                         const remaining_pices = this.#getNumActiveTiles();
                         if (!remaining_pices) {
-                            gameOver(timer.elapsed);
+                            gameOver(timer.elapsed, board.totalScore);
                             board.init();
                             return;
                         }

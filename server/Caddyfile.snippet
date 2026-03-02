@@ -1,0 +1,17 @@
+# Add this block inside your existing site block in /etc/caddy/Caddyfile
+# (replace yourdomain.com with your actual domain)
+#
+# yourdomain.com {
+#     ...your existing config...
+#
+#     # Proxy API requests to the Flask score server (gunicorn)
+#     handle /api/* {
+#         reverse_proxy 127.0.0.1:3001
+#     }
+#
+#     # Serve the game files (adjust root path as needed)
+#     handle {
+#         root * /var/www/mahjongi-kong
+#         file_server
+#     }
+# }
