@@ -39,14 +39,13 @@
             <button id="helpBtn" class="dropbtn">Help</button>
             <div class="dropdown-content dropdown-help">
               <a href="#" onclick="board.hint(true);">Hint</a>
-              <a href="#" onclick="board.shuffle(true);">Shuffle</a>
               <div class="instructions-mini">
                 <h4>How to Play</h4>
                 <ul>
                   <li>Clear two identical tiles by drawing a connecting line.</li>
                   <li>The line can have at most two 90-degree angles.</li>
                   <li>The line cannot pass through other tiles.</li>
-                  <li><strong>Note:</strong> Hint/Shuffle adds a 60-second penalty.</li>
+                  <li><strong>Note:</strong> Hint highlights and solves a pair for 0 points. Board auto-shuffles when no moves remain.</li>
                 </ul>
               </div>
             </div>
