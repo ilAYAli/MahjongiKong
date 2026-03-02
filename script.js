@@ -1231,23 +1231,23 @@ function updateScoreCanvas(timer)
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
     const font_size = 24;
-    ctx.font = font_size + "px Arial, sans-serif";
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
+    
+    // Draw Score (Primary)
+    ctx.font = font_size + "px Arial, sans-serif";
     ctx.fillStyle = "#fff";
+    ctx.fillText(board.totalScore.toLocaleString(), canvas.width / 2, canvas.height / 2 - 5);
 
+    // Draw Time (Subtle/Secondary)
     const date = new Date(timer.elapsed * 1000);
     const timeStr = timer.elapsed >= 3600 
         ? date.toISOString().slice(11, 19) 
         : date.toISOString().slice(14, 19);
-
-    // Draw Time
-    ctx.textAlign = 'left';
-    ctx.fillText(timeStr, 15, canvas.height / 2 + 1);
-
-    // Draw Score
-    ctx.textAlign = 'right';
-    ctx.fillText(board.totalScore.toLocaleString(), canvas.width - 15, canvas.height / 2 + 1);
+    
+    ctx.font = "12px Arial, sans-serif";
+    ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+    ctx.fillText(timeStr, canvas.width / 2, canvas.height - 10);
 
     next_hint--;
     if (next_hint <= 0) {
