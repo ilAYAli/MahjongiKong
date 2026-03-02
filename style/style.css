@@ -234,3 +234,12 @@ canvas {
     .dropbtn { padding: 8px 12px; font-size: 12px; }
     #score_div { height: 32px; }
 }
+
+.penalty {
+    animation: penalty-flash 0.5s ease-out;
+}
+
+@keyframes penalty-flash {
+    0% { background: #ff4757; transform: scale(1.1); }
+    100% { background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%); transform: scale(1); }
+}

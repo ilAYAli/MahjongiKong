@@ -57,6 +57,19 @@ window.addEventListener('resize', () => {
 });
 
 
+canvas.addEventListener('mousemove', function(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const xpos = (e.clientX - rect.left) * scaleX;
+    const ypos = (e.clientY - rect.top) * scaleY;
+    board.hoverIdx = board.posToBoardIdx(xpos, ypos);
+});
+
+canvas.addEventListener('mouseleave', () => {
+    board.hoverIdx = -1;
+});
+
 canvas.addEventListener('mousedown', function(e) {
     const rect = canvas.getBoundingClientRect();
     // Calculate scale factor in case the canvas is resized by CSS
@@ -225,6 +238,9 @@ class GameBoard {
         this.draw_arrows = true;
         this.demo_mode = false;
         this.have_hint = false;
+        this.animations = [];
+        this.pulse = 0;
+        this.hoverIdx = -1;
     }
 
 // private:
@@ -525,6 +541,22 @@ class GameBoard {
                 if (this.tiles[t1][0] != this.tiles[t2][0]) {
                     console.log("error, selected is not a pair:", this.tiles[t1][0], this.tiles[t2][0]);
                 }
+
+                // Trigger animations
+                const [t1_idx, t1_state] = this.tiles[t1];
+                const [t2_idx, t2_state] = this.tiles[t2];
+                this.animations.push({ type: 'pop', idx: t1, tile_idx: t1_idx, start: Date.now(), duration: 500 });
+                this.animations.push({ type: 'pop', idx: t2, tile_idx: t2_idx, start: Date.now(), duration: 500 });
+                
+                const [r, c] = this.idxToCoord(t1);
+                this.animations.push({
+                    type: 'points',
+                    x: r * this.tile_width + this.tile_width/2,
+                    y: c * this.tile_height + this.tile_height/2,
+                    start: Date.now(),
+                    duration: 1000
+                });
+
                 this.tiles[t1][1] = TILE.dead;
                 this.tiles[t2][1] = TILE.dead;
             }
@@ -550,52 +582,103 @@ class GameBoard {
         }
     }
 
+    #drawAnimations(ctx) {
+        const now = Date.now();
+        this.animations = this.animations.filter(anim => {
+            const elapsed = now - anim.start;
+            const progress = Math.min(elapsed / anim.duration, 1);
+            
+            ctx.save();
+            if (anim.type === 'pop') {
+                const scale = 1 + Math.sin(progress * Math.PI) * 0.4;
+                const alpha = 1 - progress;
+                ctx.globalAlpha = alpha;
+                
+                const [board_x, board_y] = this.idxToCoord(anim.idx);
+                const dx = board_x * this.tile_width + (this.tile_width / 2);
+                const dy = board_y * this.tile_height + (this.tile_height / 2);
+                
+                ctx.translate(dx, dy);
+                ctx.scale(scale, scale);
+                
+                let [tile_x, tile_y] = this.sheet.idxToCoord(anim.tile_idx);
+                ctx.drawImage(
+                    this.sheet.dark_image,
+                    tile_x * this.sheet.tile_width, tile_y * this.sheet.tile_height, 
+                    this.sheet.tile_width, this.sheet.tile_height,
+                    -this.tile_width / 2, -this.tile_height / 2, 
+                    this.tile_width, this.tile_height
+                );
+            } else if (anim.type === 'points') {
+                ctx.fillStyle = `rgba(162, 155, 254, ${1 - progress})`;
+                ctx.font = "bold 24px Arial";
+                ctx.textAlign = 'center';
+                ctx.fillText("+1", anim.x, anim.y - (progress * 50));
+            }
+            ctx.restore();
+            
+            return progress < 1;
+        });
+    }
+
     draw(ctx) {
-        ctx.clearRect(0, 30, ctx.canvas.width, ctx.canvas.height);
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         this.tile_width = ctx.canvas.width / board.rows;
-        this.tile_height = this.tile_width;//ctx.canvas.width / board.cols;
+        this.tile_height = this.tile_width;
         this.#drawOutline(ctx);
+
+        this.pulse = (this.pulse + 0.05) % (Math.PI * 2);
+        const selectionGlow = 0.5 + Math.sin(this.pulse) * 0.5;
 
         for (let i = 0; i < this.tiles.length; i++) {
             let [board_x, board_y] = this.idxToCoord(i);
             const border = ((board_y == 0 || (board_y == this.cols -1)) ||
                             (board_x == 0 || (board_x == this.rows -1)));
-            if (border)
-                continue;
+            if (border) continue;
 
             let [ss_idx, state] = this.tiles[i]
-            if (state == TILE.dead)
-                continue;
+            if (state == TILE.dead) continue;
 
             let [tile_x, tile_y] = this.sheet.idxToCoord(ss_idx);
-
             const sx = tile_x * this.sheet.tile_width;
             const sy = tile_y * this.sheet.tile_height;
-
             const dx = board_x * this.tile_width;
             const dy = board_y * this.tile_height;
 
-            let ss = this.sheet.dark_image;
+            ctx.save();
+            if (state === TILE.active && i === this.hoverIdx) {
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
+                ctx.globalAlpha = 0.9;
+            }
+
             if (state == TILE.selected) {
-                if (!spriteIdx) {
-                    ss = this.sheet.light_image;
-                } else {
-                    ctx.filter = 'invert(1)';
-                }
+                ctx.shadowBlur = 15 * selectionGlow;
+                ctx.shadowColor = '#a29bfe';
+                // Subtle lift effect
+                ctx.translate(dx + this.tile_width/2, dy + this.tile_height/2);
+                ctx.scale(1.05, 1.05);
+                ctx.translate(-(dx + this.tile_width/2), -(dy + this.tile_height/2));
+            }
+
+            let ss = this.sheet.dark_image;
+            if (state == TILE.selected && !spriteIdx) {
+                ss = this.sheet.light_image;
             }
 
             ctx.drawImage(
                 ss,
                 sx, sy, this.sheet.tile_width, this.sheet.tile_height,
                 dx, dy, this.tile_width, this.tile_height);
-
-            if (state == TILE.selected) {
-                if (spriteIdx)
-                    ctx.filter = 'none';
-            }
+            
+            ctx.restore();
         }
 
         this.#drawArrowPath(ctx);
+        this.#drawAnimations(ctx);
+        
+        requestAnimationFrame(() => this.draw(ctx));
+    }
     }
 
     posToBoardIdx(x, y) {
@@ -730,8 +813,10 @@ class GameBoard {
         this.draw(ctx);
         this.unselectAll();
 
-        if (interactive)
+        if (interactive) {
             timer.elapsed += 60;
+            triggerPenalty();
+        }
 
         return true;
     }
@@ -816,8 +901,10 @@ class GameBoard {
         board.draw_arrows = should_draw_arrows;
 
         if (interactive) {
-            if (status != SOLVED.none)
+            if (status != SOLVED.none) {
                 timer.elapsed += 60;
+                triggerPenalty();
+            }
             else {
                 alert("no moves found, shuffling..");
                 this.shuffle();
@@ -874,6 +961,33 @@ class GameBoard {
                         board.tiles[board.src_tile] = [src_tile_idx, TILE.active]
                         board.tiles[board.dst_tile] = [dst_tile_idx, TILE.active]
                     } else {
+                        // Success! Trigger animations
+                        const [src_idx, src_state] = board.tiles[board.src_tile];
+                        const [dst_idx, dst_state] = board.tiles[board.dst_tile];
+                        
+                        this.animations.push({
+                            type: 'pop',
+                            idx: board.src_tile,
+                            tile_idx: src_idx,
+                            start: Date.now(),
+                            duration: 500
+                        });
+                        this.animations.push({
+                            type: 'pop',
+                            idx: board_idx,
+                            tile_idx: dst_idx,
+                            start: Date.now(),
+                            duration: 500
+                        });
+                        
+                        this.animations.push({
+                            type: 'points',
+                            x: xpos,
+                            y: ypos,
+                            start: Date.now(),
+                            duration: 1000
+                        });
+
                         board.tiles[board.src_tile] = [src_tile_idx, TILE.dead]
                         board.tiles[board.dst_tile] = [dst_tile_idx, TILE.dead]
                         board.score++;
@@ -1075,6 +1189,13 @@ const timer = {
     },
 };
 
+
+function triggerPenalty() {
+    const scoreDiv = document.getElementById('score_div');
+    scoreDiv.classList.remove('penalty');
+    void scoreDiv.offsetWidth; // Trigger reflow
+    scoreDiv.classList.add('penalty');
+}
 
 var board = new GameBoard(12, 16, getSpriteIndex(spriteIdx));
 timer.init(updateScoreCanvas);
