@@ -244,6 +244,7 @@ class GameBoard {
         this.totalScore = 0;
         this.lastMatchTime = Date.now();
         updateTimeBar(0);
+        this.arrowShowTime = 0;
     }
 
 // private:
@@ -267,12 +268,21 @@ class GameBoard {
 
     #drawArrowPath(ctx) {
         if (!this.draw_arrows || this.arrows.length === 0) {
-            this.arrows.splice(0, this.arrows.length)
+            return;
+        }
+
+        if (Date.now() - this.arrowShowTime > 500) {
+            this.arrows.splice(0, this.arrows.length);
             return;
         }
 
         ctx.save();
         
+        // Fade out arrow as it expires
+        const elapsed = Date.now() - this.arrowShowTime;
+        const alpha = Math.max(0, 1 - (elapsed / 500));
+        ctx.globalAlpha = alpha;
+
         // Setup glow effect
         ctx.lineJoin = 'round';
         ctx.lineCap = 'round';
@@ -322,7 +332,6 @@ class GameBoard {
         ctx.fill();
         
         ctx.restore();
-        this.arrows.splice(0, this.arrows.length)
     }
 
     #drawOutline(ctx) {
@@ -706,6 +715,7 @@ class GameBoard {
     }
 
     hasValidPath(p1, p2) {
+        this.arrows.length = 0; // Clear only once at start
         let [p1x, p1y] = this.idxToCoord(p1);
         let [p2x, p2y] = this.idxToCoord(p2);
 
@@ -717,7 +727,6 @@ class GameBoard {
 
         // check horizontal -> vertical:
         if (true) {
-            this.arrows.length = 0;
             let valid_rows = this.#allValidRowsFromPoint(p1x, p1y);
             for (let r = 0; r < valid_rows.length; r++) {
                 if (this.#isReachable(valid_rows[r], p1y, p2x, p2y)) {
@@ -742,7 +751,6 @@ class GameBoard {
 
         // vertical -> horizontal:
         if (true) {
-            this.arrows.length = 0;
             let valid_cols = this.#allValidColsFromPoint(p1x, p1y);
             for (let c = 0; c < valid_cols.length; c++) {
                 if (this.#isReachable(p1x, valid_cols[c], p2x, p2y)) {
