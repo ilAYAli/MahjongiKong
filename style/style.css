@@ -9,7 +9,7 @@ html, body {
 }
 
 body {
-    background: radial-gradient(circle, #3d3e5a 0%, #1e1f29 100%);
+    background: radial-gradient(ellipse at top, #2d1b6e 0%, #0d0d1a 60%);
     color: #eee;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     min-height: 100vh;
@@ -27,10 +27,10 @@ body {
     width: 100%;
     max-width: 1064px;
     padding: 25px;
-    background: #2a2b3d; /* The color you liked for the board area */
-    border: 1px solid #4a4b65;
+    background: linear-gradient(160deg, #1a1040 0%, #120d30 100%);
+    border: 1px solid rgba(124, 108, 240, 0.6);
     border-radius: 20px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 0 28px rgba(108, 92, 231, 0.3), 0 20px 60px rgba(0, 0, 0, 0.7);
 }
 
 .wrapper {
@@ -56,11 +56,11 @@ body {
     align-items: center;
     justify-content: center;
     background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
-    padding: 0 15px;
+    padding: 5px 15px;
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
     min-width: 100px;
-    height: 38px;
+    height: auto;
     width: fit-content;
 }
 
@@ -78,8 +78,8 @@ body {
 
 #time-bar-container {
     width: 100%;
-    height: 3px;
-    background: rgba(0, 0, 0, 0.3);
+    height: 6px;
+    background: rgba(0, 0, 0, 0.4);
     overflow: hidden;
     position: absolute;
     top: 0;
@@ -90,9 +90,9 @@ body {
 #time-bar {
     width: 0%;
     height: 100%;
-    background: #a29bfe;
-    box-shadow: 0 0 10px #6c5ce7;
-    transition: width 1s linear, background-color 0.3s;
+    background: hsl(120, 90%, 50%);
+    box-shadow: 0 0 12px hsl(120, 90%, 50%);
+    transition: width 1s linear, background 0.8s ease, box-shadow 0.8s ease;
 }
 
 #board_div canvas {
@@ -112,19 +112,21 @@ canvas {
     color: white;
     padding: 10px 20px;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
+    font-family: 'Juice Avocado', 'Segoe UI', sans-serif;
     border: none;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s ease;
-    box-shadow: 0 4px 10px rgba(108, 92, 231, 0.2);
-    letter-spacing: 0.5px;
+    box-shadow: 0 4px 14px rgba(108, 92, 231, 0.45);
+    letter-spacing: 1px;
     text-transform: uppercase;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.3);
 }
 
 .dropbtn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(108, 92, 231, 0.4);
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 8px 22px rgba(108, 92, 231, 0.65);
 }
 
 .dropdown {
@@ -135,11 +137,11 @@ canvas {
 .dropdown-content {
     display: none;
     position: absolute;
-    background: #3d3e5a;
+    background: linear-gradient(160deg, #1e1260 0%, #130e38 100%);
     min-width: 200px;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 20px rgba(108,92,231,0.25);
     border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(162, 155, 254, 0.3);
     z-index: 100;
     top: 100%;
     left: 50%;
@@ -233,7 +235,7 @@ canvas {
         padding: 10px calc(2px + env(safe-area-inset-right)) 40px calc(2px + env(safe-area-inset-left));
         border-radius: 0;
         min-height: 100dvh;
-        background: #2a2b3d;
+        background: linear-gradient(160deg, #1a1040 0%, #120d30 100%);
         border: none;
     }
     
@@ -252,7 +254,7 @@ canvas {
     }
 
     .dropbtn { padding: 8px 12px; font-size: 12px; }
-    #score_div { height: 38px; }
+    #score_div { height: auto; }
 }
 
 .penalty {

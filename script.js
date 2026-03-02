@@ -335,6 +335,36 @@ class GameBoard {
         ctx.restore();
     }
 
+    #drawSlots(ctx) {
+        const pad = 2;
+        const radius = 4;
+        ctx.fillStyle = 'rgba(80, 60, 180, 0.22)';
+        for (let i = 0; i < this.tiles.length; i++) {
+            const [board_x, board_y] = this.idxToCoord(i);
+            const border = ((board_y === 0 || board_y === this.cols - 1) ||
+                            (board_x === 0 || board_x === this.rows - 1));
+            if (border) continue;
+            const [, state] = this.tiles[i];
+            if (state === TILE.unused) continue;
+            const dx = board_x * this.tile_width + pad;
+            const dy = board_y * this.tile_height + pad;
+            const w  = this.tile_width  - pad * 2;
+            const h  = this.tile_height - pad * 2;
+            ctx.beginPath();
+            ctx.roundRect(dx, dy, w, h, radius);
+            ctx.fill();
+        }
+    }
+
+    #addBurst(x, y) {
+        const particles = [];
+        for (let j = 0; j < 10; j++) {
+            const angle = (j / 10) * Math.PI * 2 + Math.random() * 0.3;
+            particles.push({ vx: Math.cos(angle), vy: Math.sin(angle), hue: 245 + Math.random() * 55 });
+        }
+        this.animations.push({ type: 'burst', x, y, particles, start: Date.now(), duration: 600 });
+    }
+
     #drawOutline(ctx) {
         let active_width = (board.rows - 2) * this.tile_width;
         let active_height = (board.cols - 2) * this.tile_height;
@@ -560,7 +590,13 @@ class GameBoard {
                 const [t2_idx, t2_state] = this.tiles[t2];
                 this.animations.push({ type: 'pop', idx: t1, tile_idx: t1_idx, start: Date.now(), duration: 500 });
                 this.animations.push({ type: 'pop', idx: t2, tile_idx: t2_idx, start: Date.now(), duration: 500 });
-                
+
+                // Burst particles at each matched tile
+                const [r1, c1] = this.idxToCoord(t1);
+                const [r2, c2] = this.idxToCoord(t2);
+                this.#addBurst(r1 * this.tile_width + this.tile_width / 2, c1 * this.tile_height + this.tile_height / 2);
+                this.#addBurst(r2 * this.tile_width + this.tile_width / 2, c2 * this.tile_height + this.tile_height / 2);
+
                 // Only accumulate score in non-demo (real player) play
                 if (!this.demo_mode) {
                     const timeSinceLast = (Date.now() - this.lastMatchTime) / 1000;
@@ -576,12 +612,13 @@ class GameBoard {
                         y: c * this.tile_height + this.tile_height/2,
                         points: pointsAwarded,
                         start: Date.now(),
-                        duration: 1000
+                        duration: 1200
                     });
                 }
 
                 this.tiles[t1][1] = TILE.dead;
                 this.tiles[t2][1] = TILE.dead;
+                break; // pair found and processed, stop scanning
             }
         }
         this.draw(ctx);
@@ -633,10 +670,28 @@ class GameBoard {
                     this.tile_width, this.tile_height
                 );
             } else if (anim.type === 'points') {
-                ctx.fillStyle = `rgba(162, 155, 254, ${1 - progress})`;
-                ctx.font = "bold 24px Arial";
+                const alpha = progress < 0.3 ? 1 : Math.max(0, 1 - (progress - 0.3) / 0.7);
+                ctx.save();
+                ctx.translate(anim.x, anim.y - (progress * 55));
+                ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                ctx.shadowColor = '#a29bfe';
+                ctx.shadowBlur = 8;
+                ctx.font = "bold 26px Arial";
                 ctx.textAlign = 'center';
-                ctx.fillText("+" + anim.points, anim.x, anim.y - (progress * 50));
+                ctx.textBaseline = 'middle';
+                ctx.fillText("+" + anim.points, 0, 0);
+                ctx.restore();
+            } else if (anim.type === 'burst') {
+                anim.particles.forEach(p => {
+                    const dist = progress * this.tile_width * 0.85;
+                    const px = anim.x + p.vx * dist;
+                    const py = anim.y + p.vy * dist;
+                    const alpha = Math.pow(1 - progress, 1.5);
+                    ctx.fillStyle = `hsla(${p.hue}, 100%, 72%, ${alpha})`;
+                    ctx.beginPath();
+                    ctx.arc(px, py, (1 - progress) * 5, 0, Math.PI * 2);
+                    ctx.fill();
+                });
             }
             ctx.restore();
             
@@ -648,6 +703,15 @@ class GameBoard {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         this.tile_width = ctx.canvas.width / board.rows;
         this.tile_height = this.tile_width;
+
+        // Canvas background gradient
+        const bg = ctx.createLinearGradient(0, 0, ctx.canvas.width * 0.5, ctx.canvas.height);
+        bg.addColorStop(0, '#140e35');
+        bg.addColorStop(1, '#0b0820');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+        this.#drawSlots(ctx);
         this.#drawOutline(ctx);
 
         this.pulse = (this.pulse + 0.05) % (Math.PI * 2);
@@ -689,10 +753,11 @@ class GameBoard {
                 ss = this.sheet.light_image;
             }
 
+            const pad = 2;
             ctx.drawImage(
                 ss,
                 sx, sy, this.sheet.tile_width, this.sheet.tile_height,
-                dx, dy, this.tile_width, this.tile_height);
+                dx + pad, dy + pad, this.tile_width - pad * 2, this.tile_height - pad * 2);
             
             ctx.restore();
         }
@@ -1003,7 +1068,13 @@ class GameBoard {
                             start: Date.now(),
                             duration: 500
                         });
-                        
+
+                        // Burst particles at each matched tile
+                        const [bxs, bys] = board.idxToCoord(board.src_tile);
+                        const [bxd, byd] = board.idxToCoord(board_idx);
+                        this.#addBurst(bxs * this.tile_width + this.tile_width / 2, bys * this.tile_height + this.tile_height / 2);
+                        this.#addBurst(bxd * this.tile_width + this.tile_width / 2, byd * this.tile_height + this.tile_height / 2);
+
                         // Calculate points based on time since last match
                         const timeSinceLast = (Date.now() - this.lastMatchTime) / 1000;
                         const clampedTime = Math.max(1, Math.min(30, timeSinceLast));
@@ -1017,7 +1088,7 @@ class GameBoard {
                             y: ypos,
                             points: pointsAwarded,
                             start: Date.now(),
-                            duration: 1000
+                            duration: 1200
                         });
 
                         board.tiles[board.src_tile] = [src_tile_idx, TILE.dead]
@@ -1225,13 +1296,23 @@ const timer = {
 };
 
 
+function getTimeBarColor(elapsed) {
+    const maxTime = 900;
+    const progress = Math.min(elapsed / maxTime, 1);
+    const hue = Math.round(120 * (1 - progress));
+    const lit = progress > 0.66 ? 42 : 50;
+    return `hsl(${hue}, 90%, ${lit}%)`;
+}
+
 function updateTimeBar(elapsed) {
     const bar = document.getElementById('time-bar');
     if (!bar) return;
-    // Assume 15 minutes (900s) is the 100% width goal
     const maxTime = 900;
     const percentage = Math.min((elapsed / maxTime) * 100, 100);
     bar.style.width = percentage + "%";
+    const color = getTimeBarColor(elapsed);
+    bar.style.background = color;
+    bar.style.boxShadow = `0 0 12px ${color}`;
 }
 
 function triggerPenalty() {
@@ -1239,13 +1320,16 @@ function triggerPenalty() {
     const timeBar = document.getElementById('time-bar');
     
     scoreDiv.classList.remove('penalty');
-    if (timeBar) timeBar.style.backgroundColor = '#ff4757';
+    if (timeBar) {
+        timeBar.style.background = '#ff4757';
+        timeBar.style.boxShadow = '0 0 12px #ff4757';
+    }
     
     void scoreDiv.offsetWidth; // Trigger reflow
     scoreDiv.classList.add('penalty');
     
     setTimeout(() => {
-        if (timeBar) timeBar.style.backgroundColor = '#a29bfe';
+        updateTimeBar(timer.elapsed);
     }, 500);
 }
 
@@ -1259,19 +1343,45 @@ timer.init((t) => {
 var next_hint = DEFAULT_TIMEOUT;
 function updateScoreCanvas(timer)
 {
-    let xpos = 0;
     const canvas = document.getElementById('score_canvas');
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
-    const font_size = 24;
     ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    
-    // Draw Score (Primary)
-    ctx.font = font_size + "px Arial, sans-serif";
+
+    // Label
+    ctx.font = "bold 11px 'Segoe UI', sans-serif";
+    ctx.fillStyle = "rgba(255,255,255,0.55)";
+    ctx.textBaseline = 'top';
+    ctx.fillText("SCORE", canvas.width / 2, 4);
+
+    // Score number
+    ctx.font = "bold 26px 'Juice Avocado', Arial, sans-serif";
     ctx.fillStyle = "#fff";
-    ctx.fillText(board.totalScore.toLocaleString(), canvas.width / 2, canvas.height / 2 + 1);
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText(board.totalScore.toLocaleString(), canvas.width / 2, 42);
+
+    // Separator
+    ctx.beginPath();
+    ctx.moveTo(10, 50);
+    ctx.lineTo(canvas.width - 10, 50);
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Bonus countdown — show next match point value, colour shifts as time runs out
+    if (!board.demo_mode) {
+        const timeSinceLast = (Date.now() - board.lastMatchTime) / 1000;
+        const clampedTime = Math.max(1, Math.min(30, timeSinceLast));
+        const nextPoints = Math.round(1000 - (900 * (clampedTime - 1) / 29));
+        const pulse = clampedTime > 20 ? 0.75 + 0.25 * Math.sin(Date.now() / 150) : 1;
+        ctx.globalAlpha = pulse;
+        ctx.font = "bold 14px 'Segoe UI', sans-serif";
+        ctx.fillStyle = `rgba(255, 255, 255, 0.75)`;
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillText(`NEXT +${nextPoints}`, canvas.width / 2, canvas.height - 4);
+        ctx.globalAlpha = 1;
+    }
 
     next_hint--;
     if (next_hint <= 0) {
