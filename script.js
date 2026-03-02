@@ -257,6 +257,7 @@ class GameBoard {
         this.hoverIdx = -1;
         this.totalScore = 0;
         this.hintCount = 0;
+        this.hintedMove = false;
         this.lastMatchTime = Date.now();
         updateTimeBar(0);
         this.arrowShowTime = 0;
@@ -688,8 +689,10 @@ class GameBoard {
                 const alpha = progress < 0.3 ? 1 : Math.max(0, 1 - (progress - 0.3) / 0.7);
                 ctx.save();
                 ctx.translate(anim.x, anim.y - (progress * 55));
-                ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-                ctx.shadowColor = '#a29bfe';
+                ctx.fillStyle = anim.points === 0
+                    ? `rgba(160, 160, 160, ${alpha})`
+                    : `rgba(255, 255, 255, ${alpha})`;
+                ctx.shadowColor = anim.points === 0 ? '#888' : '#a29bfe';
                 ctx.shadowBlur = 8;
                 ctx.font = "bold 26px Arial";
                 ctx.textAlign = 'center';
@@ -1010,6 +1013,7 @@ class GameBoard {
         if (interactive) {
             if (status != SOLVED.none) {
                 this.hintCount++;
+                this.hintedMove = true;
                 timer.elapsed += 60;
                 triggerPenalty();
             }
@@ -1063,11 +1067,13 @@ class GameBoard {
                 if (src_tile_idx != dst_tile_idx) { // not matching tiles:
                     board.tiles[board.src_tile] = [src_tile_idx, TILE.active]
                     board.tiles[board.dst_tile] = [dst_tile_idx, TILE.active]
+                    this.hintedMove = false;
                 } else {
                     board.tiles[board.dst_tile] = [dst_tile_idx, TILE.selected];
                     if (!board.hasValidPath(board.src_tile, board_idx)) {
                         board.tiles[board.src_tile] = [src_tile_idx, TILE.active]
                         board.tiles[board.dst_tile] = [dst_tile_idx, TILE.active]
+                        this.hintedMove = false;
                     } else {
                         // Success! Trigger animations
                         board.arrowShowTime = Date.now(); // start the arrow fade-out timer
@@ -1095,10 +1101,11 @@ class GameBoard {
                         this.#addBurst(bxs * this.tile_width + this.tile_width / 2, bys * this.tile_height + this.tile_height / 2);
                         this.#addBurst(bxd * this.tile_width + this.tile_width / 2, byd * this.tile_height + this.tile_height / 2);
 
-                        // Calculate points based on time since last match
+                        // Calculate points based on time since last match (0 if hint was used)
                         const timeSinceLast = (Date.now() - this.lastMatchTime) / 1000;
                         const clampedTime = Math.max(1, Math.min(30, timeSinceLast));
-                        const pointsAwarded = Math.round(1000 - (900 * (clampedTime - 1) / 29));
+                        const pointsAwarded = this.hintedMove ? 0 : Math.round(1000 - (900 * (clampedTime - 1) / 29));
+                        this.hintedMove = false;
                         this.totalScore += pointsAwarded;
                         this.lastMatchTime = Date.now();
 
@@ -1158,6 +1165,7 @@ class GameBoard {
         board.score = 0;
         this.totalScore = 0;
         this.hintCount = 0;
+        this.hintedMove = false;
         this.lastMatchTime = Date.now();
         updateTimeBar(0);
 
