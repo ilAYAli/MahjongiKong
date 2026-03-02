@@ -1017,8 +1017,7 @@ class GameBoard {
                 triggerPenalty();
             }
             else {
-                alert("no moves found, shuffling..");
-                this.shuffle(false); // free — forced by board state
+                this.shuffle(false); // no moves, free shuffle
             }
             this.unselectAll();
         }
@@ -1129,6 +1128,11 @@ class GameBoard {
                             gameOver(timer.elapsed, board.totalScore, board.hintCount);
                             board.init();
                             return;
+                        }
+
+                        // Auto-shuffle for free if board is no longer solvable
+                        if (!this.solve()) {
+                            this.shuffle(false);
                         }
                     }
                 }
