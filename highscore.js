@@ -92,8 +92,10 @@ async function gameOver(elapsed, totalScore, hints = 0) {
         setTimeout(() => input.focus(), 50);
 
         async function doSubmit() {
-            const name = input.value.trim();
-            if (!name) { input.focus(); return; }
+            const raw = input.value.trim();
+            if (!raw) { input.focus(); return; }
+            // Normalize: first char uppercase, rest lowercase
+            const name = raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
             modal.style.display = "none";
 
             const board_url = (typeof encodeBoard === "function") ? encodeBoard() : null;
