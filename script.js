@@ -1455,6 +1455,7 @@ function demo(activate = true, delay = 1000) {
         board.demo_mode = true;
         board.draw_arrows = true;
         board.totalScore = 0;
+        document.getElementById('score_div').style.visibility = 'hidden';
         demoId = setInterval(() => {
             const status = board.hint(false);
             switch (status) {
@@ -1462,6 +1463,7 @@ function demo(activate = true, delay = 1000) {
                     console.log("unable to solve board, stopping demo");
                     clearInterval(demoId);
                     board.demo_mode = false;
+                    document.getElementById('score_div').style.visibility = '';
                     break;
                 case SOLVED.all:
                     console.log("board solved, resarting");
@@ -1477,6 +1479,7 @@ function demo(activate = true, delay = 1000) {
     } else {
         board.demo_mode = false;
         board.init();
+        document.getElementById('score_div').style.visibility = '';
 
         if (!demoId)
             return;
