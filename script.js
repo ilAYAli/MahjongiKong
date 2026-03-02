@@ -258,6 +258,7 @@ class GameBoard {
         this.totalScore = 0;
         this.hintCount = 0;
         this.hintedMove = false;
+        this.waitingForFirstClick = true;
         this.lastMatchTime = Date.now();
         updateTimeBar(0);
         this.arrowShowTime = 0;
@@ -1047,6 +1048,11 @@ class GameBoard {
 
         this.have_hint = false;
         this.arrows.splice(0, this.arrows.length);
+        if (this.waitingForFirstClick && tile !== TILE.unused) {
+            this.waitingForFirstClick = false;
+            this.lastMatchTime = Date.now();
+            timer.start();
+        }
         board.dst_tile = -1;
         if (board.src_tile == -1) {
             if (tile == TILE.active) {
@@ -1171,6 +1177,7 @@ class GameBoard {
         this.totalScore = 0;
         this.hintCount = 0;
         this.hintedMove = false;
+        this.waitingForFirstClick = true;
         this.lastMatchTime = Date.now();
         updateTimeBar(0);
 
@@ -1213,6 +1220,7 @@ class GameBoard {
         createQR();
 
         timer.init(updateScoreCanvas);
+        timer.stop(); // don't tick until first click
         board.src_tile = -1;
         board.dst_tile = -1;
         board.draw(ctx);
