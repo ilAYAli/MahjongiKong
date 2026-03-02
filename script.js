@@ -957,6 +957,7 @@ class GameBoard {
 
         this.tiles = structuredClone(board_clone);
         this.score = tmp_score;
+        this.arrows.length = 0; // discard any paths built during solvability check
         this.draw(ctx);
         this.draw_arrows = should_draw_arrows;
         return status == SOLVED.all;
