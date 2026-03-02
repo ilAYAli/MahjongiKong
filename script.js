@@ -1405,8 +1405,8 @@ function updateScoreCanvas(timer)
     // Score number
     ctx.font = "bold 22px 'Juice Avocado', Arial, sans-serif";
     ctx.fillStyle = "#fff";
-    ctx.shadowColor = 'rgba(200, 190, 255, 0.85)';
-    ctx.shadowBlur = 10;
+    ctx.shadowColor = 'rgba(200, 190, 255, 0.9)';
+    ctx.shadowBlur = 14;
     ctx.textBaseline = 'alphabetic';
     ctx.fillText(board.totalScore.toLocaleString(), cssW / 2, 24);
     ctx.shadowBlur = 0;
@@ -1420,8 +1420,8 @@ function updateScoreCanvas(timer)
         ctx.globalAlpha = pulse;
         ctx.font = "bold 15px 'Juice Avocado', Arial, sans-serif";
         ctx.fillStyle = '#fff';
-        ctx.shadowColor = 'rgba(200, 190, 255, 0.75)';
-        ctx.shadowBlur = 8;
+        ctx.shadowColor = 'rgba(200, 190, 255, 0.9)';
+        ctx.shadowBlur = 10;
         ctx.textBaseline = 'alphabetic';
         ctx.fillText(`NEXT +${nextPoints}`, cssW / 2, cssH - 8);
         ctx.shadowBlur = 0;
