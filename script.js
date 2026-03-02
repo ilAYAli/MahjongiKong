@@ -334,7 +334,7 @@ class GameBoard {
         ctx.shadowBlur  = 18;
         ctx.shadowColor = '#a29bfe';
         for (let i = 0; i < pts.length - 1; i++) {
-            this.#lightningSegment(ctx, pts[i][0], pts[i][1], pts[i+1][0], pts[i+1][1], 7, seed + i * 17);
+            this.#lightningSegment(ctx, pts[i][0], pts[i][1], pts[i+1][0], pts[i+1][1], 3, seed + i * 17);
         }
 
         // Pass 2 — thin bright core
@@ -343,7 +343,7 @@ class GameBoard {
         ctx.shadowBlur  = 6;
         ctx.shadowColor = '#fff';
         for (let i = 0; i < pts.length - 1; i++) {
-            this.#lightningSegment(ctx, pts[i][0], pts[i][1], pts[i+1][0], pts[i+1][1], 5, seed + i * 17);
+            this.#lightningSegment(ctx, pts[i][0], pts[i][1], pts[i+1][0], pts[i+1][1], 2, seed + i * 17);
         }
 
         ctx.restore();
