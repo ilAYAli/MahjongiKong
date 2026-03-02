@@ -11,9 +11,9 @@ After=network.target
 
 [Service]
 Type=simple
-User=www-data
-WorkingDirectory=/var/www/mahjongi-kong/server
-ExecStart=/usr/bin/python3 /var/www/mahjongi-kong/server/app.py
+User=petter
+WorkingDirectory=/home/petter/code/javascript/MahjongiKong/server
+ExecStart=/usr/bin/python3 /home/petter/code/javascript/MahjongiKong/server/app.py
 Restart=on-failure
 RestartSec=5
 
@@ -21,7 +21,7 @@ RestartSec=5
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
-ReadWritePaths=/var/www/mahjongi-kong/server/data
+ReadWritePaths=/home/petter/code/javascript/MahjongiKong/server/data
 
 [Install]
 WantedBy=multi-user.target
