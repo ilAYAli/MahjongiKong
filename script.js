@@ -1349,22 +1349,16 @@ function updateScoreCanvas(timer)
 
     ctx.textAlign = 'center';
 
-    // Label
-    ctx.font = "bold 11px 'Segoe UI', sans-serif";
-    ctx.fillStyle = "rgba(255,255,255,0.55)";
-    ctx.textBaseline = 'top';
-    ctx.fillText("SCORE", canvas.width / 2, 4);
-
     // Score number
-    ctx.font = "bold 26px 'Juice Avocado', Arial, sans-serif";
+    ctx.font = "bold 22px 'Juice Avocado', Arial, sans-serif";
     ctx.fillStyle = "#fff";
     ctx.textBaseline = 'alphabetic';
-    ctx.fillText(board.totalScore.toLocaleString(), canvas.width / 2, 42);
+    ctx.fillText(board.totalScore.toLocaleString(), canvas.width / 2, 24);
 
     // Separator
     ctx.beginPath();
-    ctx.moveTo(10, 50);
-    ctx.lineTo(canvas.width - 10, 50);
+    ctx.moveTo(10, 29);
+    ctx.lineTo(canvas.width - 10, 29);
     ctx.strokeStyle = 'rgba(255,255,255,0.15)';
     ctx.lineWidth = 1;
     ctx.stroke();
@@ -1376,10 +1370,13 @@ function updateScoreCanvas(timer)
         const nextPoints = Math.round(1000 - (900 * (clampedTime - 1) / 29));
         const pulse = clampedTime > 20 ? 0.75 + 0.25 * Math.sin(Date.now() / 150) : 1;
         ctx.globalAlpha = pulse;
-        ctx.font = "bold 14px 'Segoe UI', sans-serif";
-        ctx.fillStyle = `rgba(255, 255, 255, 0.75)`;
+        ctx.font = "bold 15px 'Juice Avocado', Arial, sans-serif";
+        ctx.fillStyle = '#fff';
+        ctx.shadowColor = '#a29bfe';
+        ctx.shadowBlur = 6;
         ctx.textBaseline = 'alphabetic';
-        ctx.fillText(`NEXT +${nextPoints}`, canvas.width / 2, canvas.height - 4);
+        ctx.fillText(`NEXT +${nextPoints}`, canvas.width / 2, canvas.height - 2);
+        ctx.shadowBlur = 0;
         ctx.globalAlpha = 1;
     }
 
