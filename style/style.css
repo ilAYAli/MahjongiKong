@@ -297,13 +297,27 @@ body.view-mode #time-bar-container { display: none !important; }
 body.view-mode #board_div { margin-top: 0; }
 
 #view-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px 6px;
+}
+
+#view-banner span {
     font-family: 'Juice Avocado', sans-serif;
     font-size: 20px;
     letter-spacing: 2px;
+}
+
+#view-banner span:first-child {
     color: #ffd700;
-    text-align: center;
-    padding: 8px 0 6px;
     text-shadow: 0 0 12px rgba(255,215,0,0.4);
+}
+
+#view-back {
+    color: rgba(162,155,254,0.7);
+    font-size: 15px !important;
+    cursor: pointer;
 }
 
 @keyframes penalty-flash {

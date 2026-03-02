@@ -16,12 +16,11 @@ const viewPlayer = urlParams.get('player') || '';
 if (viewMode) document.body.classList.add('view-mode');
 if (viewMode) {
     canvas.addEventListener('click', () => history.back(), { once: true });
-    if (viewPlayer) {
-        const banner = document.createElement('div');
-        banner.id = 'view-banner';
-        banner.textContent = viewPlayer + "'s board";
-        document.getElementById('board_div').prepend(banner);
-    }
+    const banner = document.createElement('div');
+    banner.id = 'view-banner';
+    banner.innerHTML = (viewPlayer ? `<span>${viewPlayer}'s board</span>` : '') +
+        '<span id="view-back">click to go back</span>';
+    document.getElementById('board_div').prepend(banner);
 }
 
 let level = 0;
@@ -781,15 +780,7 @@ class GameBoard {
         this.#drawAnimations(ctx);
 
         if (viewMode) {
-            ctx.save();
-            ctx.fillStyle = "rgba(0,0,0,0.3)";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.font = "28px 'Juice Avocado', sans-serif";
-            ctx.fillStyle = "rgba(162,155,254,0.4)";
-            ctx.fillText("click to go back", canvas.width / 2, canvas.height / 2);
-            ctx.restore();
+            // no canvas overlay — UI is in DOM banner
         }
 
         cancelAnimationFrame(this._rafId);
