@@ -1389,17 +1389,24 @@ function getTimeBarColor(progress) {
 function updateTimeBar() {
     const bar = document.getElementById('time-bar');
     if (!bar) return;
-    const lastMatch = (typeof board !== 'undefined') ? board.lastMatchTime : Date.now();
-    if ((typeof board !== 'undefined') && board.hintedMove) {
+    if (typeof board === 'undefined') return;
+    if (board.waitingForFirstClick) {
+        const color = getTimeBarColor(1);
+        bar.style.width = '100%';
+        bar.style.background = color;
+        bar.style.boxShadow = `0 0 12px ${color}`;
+        return;
+    }
+    if (board.hintedMove) {
         bar.style.width = '0%';
         bar.style.background = 'rgba(180,180,180,0.35)';
         bar.style.boxShadow = 'none';
         return;
     }
-    const timeSinceLast = (Date.now() - lastMatch) / 1000;
+    const timeSinceLast = (Date.now() - board.lastMatchTime) / 1000;
     const clampedTime = Math.max(1, Math.min(30, timeSinceLast));
     const nextPoints = Math.round(1000 - (900 * (clampedTime - 1) / 29));
-    const progress = (nextPoints - 100) / 900;  // 1.0 = 1000pts, 0.0 = 100pts
+    const progress = (nextPoints - 100) / 900;
     bar.style.width = (progress * 100) + '%';
     const color = getTimeBarColor(progress);
     bar.style.background = color;
@@ -1449,12 +1456,17 @@ function updateScoreCanvas(timer)
     ctx.clearRect(0, 0, cssW, cssH);
     ctx.textAlign = 'center';
 
-    // Score number
+    // Score number — two passes to match menu button glow (white inner + purple outer)
     ctx.font = "bold 16px 'Juice Avocado', Arial, sans-serif";
-    ctx.fillStyle = "#fff";
-    ctx.shadowColor = 'rgba(200, 190, 255, 0.9)';
-    ctx.shadowBlur = 14;
     ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = "#fff";
+    // Pass 1: white inner glow
+    ctx.shadowColor = 'rgba(255, 255, 255, 0.6)';
+    ctx.shadowBlur = 5;
+    ctx.fillText(board.totalScore.toLocaleString(), cssW / 2, 17);
+    // Pass 2: purple outer glow
+    ctx.shadowColor = 'rgba(200, 190, 255, 0.75)';
+    ctx.shadowBlur = 12;
     ctx.fillText(board.totalScore.toLocaleString(), cssW / 2, 17);
     ctx.shadowBlur = 0;
 
