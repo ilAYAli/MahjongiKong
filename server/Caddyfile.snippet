@@ -4,7 +4,7 @@
 # yourdomain.com {
 #     ...your existing config...
 #
-#     # Proxy API requests to the Flask score server (gunicorn)
+#     # Proxy API requests to the score server (pure Python, no pip required)
 #     handle /api/* {
 #         reverse_proxy 127.0.0.1:3001
 #     }

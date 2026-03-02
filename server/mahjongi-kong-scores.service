@@ -6,18 +6,14 @@
 #   sudo systemctl enable --now mahjongi-kong-scores
 
 [Unit]
-Description=MahjongiKong Score Server (gunicorn)
+Description=MahjongiKong Score Server
 After=network.target
 
 [Service]
 Type=simple
 User=www-data
 WorkingDirectory=/var/www/mahjongi-kong/server
-ExecStart=/var/www/mahjongi-kong/server/venv/bin/gunicorn \
-    --bind 127.0.0.1:3001 \
-    --workers 2 \
-    --access-logfile - \
-    app:app
+ExecStart=/usr/bin/python3 /var/www/mahjongi-kong/server/app.py
 Restart=on-failure
 RestartSec=5
 

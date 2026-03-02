@@ -1,2 +1,1 @@
-flask>=3.0
-gunicorn>=22.0
+# No dependencies — the server uses Python stdlib only (python3 app.py)

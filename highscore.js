@@ -1,4 +1,7 @@
-const API_BASE = "/api";
+// Use absolute URL when opened from the filesystem (local dev), otherwise same-origin
+const API_BASE = location.protocol === "file:"
+    ? "http://localhost:3001/api"
+    : "/api";
 
 async function loadHighscore() {
     const div = document.getElementById("highscore_div");
@@ -7,8 +10,9 @@ async function loadHighscore() {
     let rows;
     try {
         const resp = await fetch(`${API_BASE}/highscores`);
-        if (!resp.ok) throw new Error(resp.status);
-        rows = await resp.json();
+        const text = await resp.text();
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        rows = JSON.parse(text);
     } catch (_) {
         div.innerHTML = '<a href="#">Could not load scores</a>';
         return;
@@ -47,8 +51,9 @@ async function gameOver(elapsed, totalScore) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ name, score: totalScore }),
         });
-        result = await resp.json();
-        if (!resp.ok) throw new Error(result.error ?? resp.status);
+        const text = await resp.text();
+        result = text ? JSON.parse(text) : {};
+        if (!resp.ok) throw new Error(result.error ?? `HTTP ${resp.status}`);
     } catch (err) {
         alert(`Could not save score: ${err.message}`);
         return;
