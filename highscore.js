@@ -47,7 +47,17 @@ async function loadHighscore() {
 
         const nameEl = document.createElement("span");
         nameEl.className = "hs-name";
-        nameEl.textContent = row.name;
+        if (row.board_url) {
+            const link = document.createElement("a");
+            link.href = row.board_url;
+            link.textContent = row.name;
+            link.style.color = "inherit";
+            link.style.textDecoration = "underline";
+            link.style.textUnderlineOffset = "3px";
+            nameEl.appendChild(link);
+        } else {
+            nameEl.textContent = row.name;
+        }
 
         const scoreEl = document.createElement("span");
         scoreEl.className = "hs-score";
@@ -80,12 +90,14 @@ async function gameOver(elapsed, totalScore) {
             if (!name) { input.focus(); return; }
             modal.style.display = "none";
 
+            const board_url = (typeof encodeBoard === "function") ? encodeBoard() : null;
+
             let result;
             try {
                 const resp = await fetch(`${API_BASE}/highscores`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ name, score: totalScore }),
+                    body: JSON.stringify({ name, score: totalScore, board_url }),
                 });
                 const text = await resp.text();
                 result = text ? JSON.parse(text) : {};
