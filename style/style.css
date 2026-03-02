@@ -159,8 +159,7 @@ canvas {
     height: 15px;
 }
 
-#highscore_div::before {
-    content: 'HIGHSCORES';
+#highscore_div .hs-header {
     display: block;
     font-family: 'Juice Avocado', sans-serif;
     font-size: 18px;
@@ -170,6 +169,7 @@ canvas {
     padding: 16px 20px 10px;
     border-bottom: 1px solid rgba(162, 155, 254, 0.2);
     margin-bottom: 4px;
+    pointer-events: none;
 }
 
 @keyframes slideDown {

@@ -20,6 +20,11 @@ async function loadHighscore() {
 
     div.innerHTML = '';
 
+    const header = document.createElement("div");
+    header.className = "hs-header";
+    header.textContent = "HIGHSCORES";
+    div.appendChild(header);
+
     if (!rows.length) {
         const a = document.createElement("a");
         a.textContent = "No scores yet - be first!";
