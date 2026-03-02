@@ -1280,6 +1280,18 @@ function getSpriteIndex(idx)
             let ss = new SpriteSheet(
                 64, 64,
                 5, 10,
+                'assets/deck_mahjong_neon_0.png',
+                'assets/deck_mahjong_neon_light_0.png'
+            );
+            ss.empty_tile = 38; // 38: invisible, 49: block
+            ss.unused_tiles = [ 38, 39, 48, 49 ];
+            return ss;
+        }
+
+        case 1: {
+            let ss = new SpriteSheet(
+                64, 64,
+                5, 10,
                 'assets/deck_mahjong_dark_0.png',
                 'assets/deck_mahjong_light_0.png'
             );
@@ -1288,7 +1300,7 @@ function getSpriteIndex(idx)
             return ss;
         }
 
-        case 1: {
+        case 2: {
             let ss = new SpriteSheet(
                 64, 64,
                 6, 12,
@@ -1299,8 +1311,7 @@ function getSpriteIndex(idx)
             return ss;
         }
 
-
-        case 2: {
+        case 3: {
             let ss = new SpriteSheet(
                 96, 96,
                 4, 8,
@@ -1311,7 +1322,7 @@ function getSpriteIndex(idx)
             return ss;
         }
 
-        case 3: {
+        case 4: {
             let ss = new SpriteSheet(
                 225, 252,
                 5, 13,
@@ -1319,18 +1330,6 @@ function getSpriteIndex(idx)
                 'assets/cards.jpg'
             );
             ss.empty_tile = 64;
-            return ss;
-        }
-
-        case 4: {
-            let ss = new SpriteSheet(
-                64, 64,
-                5, 10,
-                'assets/deck_mahjong_neon_0.png',
-                'assets/deck_mahjong_neon_light_0.png'
-            );
-            ss.empty_tile = 38; // 38: invisible, 49: block
-            ss.unused_tiles = [ 38, 39, 48, 49 ];
             return ss;
         }
     }
