@@ -2,18 +2,26 @@
 <html lang="eng">
   <head>
     <meta charset="UTF-8">
-    <meta http=equiv="X-UA-Compatible" content="IE=Edge">
-    <meta name="viewport" content="width=device-width,height=768" initia-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
     <title>MahjongiKong</title>
     <link href="https://fonts.cdnfonts.com/css/juice-avocado" rel="stylesheet">
     <link rel="stylesheet" href="style/style.css" />
-
-    <link type="image/png" rel="shortcut icon" href="./assets/favicon.ico"/>
+    <link type="image/x-icon" rel="shortcut icon" href="./assets/favicon.ico"/>
+    
+    <script src="lz-string.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   </head>
   <body>
-    <div id="board" width="1024">
+    <div id="orientation-warning">
+      <div class="warning-content">
+        <div class="icon-rotate">🔄</div>
+        <p>Please rotate your device to landscape mode to play MahjongiKong.</p>
+      </div>
+    </div>
+    <div id="board">
       <div class='wrapper'>
-        <div id="menu" width="900">
+        <div id="menu">
           <div class="dropdown">
             <button id="spriteBtn" class="dropbtn">Level</button>
             <div class="dropdown-content">
@@ -35,39 +43,35 @@
           </div>
           <div class="dropdown">
             <button id="helpBtn" class="dropbtn">Help</button>
-            <div class="dropdown-content">
+            <div class="dropdown-content dropdown-help">
               <a href="#" onclick="board.hint(true);">Hint</a>
               <a href="#" onclick="board.shuffle(true);">Shuffle</a>
+              <div class="instructions-mini">
+                <h4>How to Play</h4>
+                <ul>
+                  <li>Clear two identical tiles by drawing a connecting line.</li>
+                  <li>The line can have at most two 90-degree angles.</li>
+                  <li>The line cannot pass through other tiles.</li>
+                  <li><strong>Note:</strong> Hint/Shuffle adds a 60-second penalty.</li>
+                </ul>
+              </div>
             </div>
           </div>
           <div class="dropdown" id="share">
             <button id="shareBtn" class="dropbtn">Share</button>
             <div class="dropdown-content">
               <a href="#" id="url">LINK</a>
-              <div class="dropdown-share" id="qrcode"></div>
+              <div id="qrcode"></div>
             </div>
           </div>
         </div>
         <div id="score_div">
-          <canvas id="score_canvas" width="500" height="51"></canvas>
+          <canvas id="score_canvas" width="120" height="51"></canvas>
         </div>
       </div>
 
       <div id="board_div">
         <canvas id="board_canvas" width="1024" height="768"></canvas>
-      </div>
-
-      <script language="javascript" src="lz-string.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-      <div class="float-container">
-        <div class="float-child" id="about_div">
-          <pre>Clear two identical tiles if:                          </pre>
-          <pre>You can draw a connecting line between them.           </pre>
-          <pre>The line may make no more than two ninety degree angles</pre>
-          <pre>The line can not run through any other tiles           </pre>
-          <pre>Note: using help incurs a 60 second penalty.</pre>
-        </div>
-        <div class="float-child" id="qrcode"></div>
       </div>
 
       <script src="script.js"> </script>

@@ -58,11 +58,44 @@ window.addEventListener('resize', () => {
 
 
 canvas.addEventListener('mousedown', function(e) {
-    const rect = canvas.getBoundingClientRect()
-    const xpos = e.clientX - rect.left
-    const ypos = e.clientY - rect.top
+    const rect = canvas.getBoundingClientRect();
+    // Calculate scale factor in case the canvas is resized by CSS
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const xpos = (e.clientX - rect.left) * scaleX;
+    const ypos = (e.clientY - rect.top) * scaleY;
     board.mouseClick(board, xpos, ypos, true);
 });
+
+let touchStartX = 0;
+let touchStartY = 0;
+let touchStartTime = 0;
+
+canvas.addEventListener('touchstart', function(e) {
+    const touch = e.touches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+    touchStartTime = Date.now();
+    // Don't preventDefault here to allow scrolling
+}, { passive: true });
+
+canvas.addEventListener('touchend', function(e) {
+    const touch = e.changedTouches[0];
+    const dx = Math.abs(touch.clientX - touchStartX);
+    const dy = Math.abs(touch.clientY - touchStartY);
+    const dt = Date.now() - touchStartTime;
+
+    // Only trigger click if it's a quick tap with minimal movement
+    if (dx < 10 && dy < 10 && dt < 300) {
+        e.preventDefault(); // Prevent ghost clicks
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const xpos = (touch.clientX - rect.left) * scaleX;
+        const ypos = (touch.clientY - rect.top) * scaleY;
+        board.mouseClick(board, xpos, ypos, true);
+    }
+}, { passive: false });
 
 
 // return board idx from active col, row
@@ -115,8 +148,8 @@ function decodeBoard(ec) {
 function createQR() {
     QR = new QRCode("qrcode", {
         text: URI,
-        width: 200,
-        height: 200,
+        width: 160,
+        height: 160,
         colorDark : "#000000",
         colorLight : "#ffffff",
         correctLevel : QRCode.CorrectLevel.H
@@ -214,29 +247,62 @@ class GameBoard {
     }
 
     #drawArrowPath(ctx) {
-        if (!this.draw_arrows) {
+        if (!this.draw_arrows || this.arrows.length === 0) {
             this.arrows.splice(0, this.arrows.length)
             return;
         }
 
+        ctx.save();
+        
+        // Setup glow effect
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.lineWidth = 6;
+        ctx.strokeStyle = '#6c5ce7'; // Theme purple
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#a29bfe';
+        
         ctx.beginPath();
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = 'red';
-
-        this.arrows.forEach((arrow, index, array) => {
+        let first = true;
+        this.arrows.forEach((arrow, index) => {
             let [x1, y1] = board.coordToPos(arrow[0], arrow[1]);
-            let [x2, y2] = board.coordToPos(arrow[2], arrow[3])
-            x1 += (this.tile_width/2); x2 += (this.tile_width/2);
-            y1 += (this.tile_height/2); y2 += (this.tile_height/2);
-            if (index != array.length -1) {
-                this.#drawLine(ctx, x1, y1, x2, y2);
-            } else {
-                const headlen = 5;
-                const theta = Math.atan2(y2 - y1, x2 - x1);
-                this.#drawLine(ctx, x1, y1, x2, y2);
-                this.#drawArrowHead(ctx, x2 - headlen * Math.cos(theta), y2 - headlen * Math.sin(theta), x2, y2);
+            let [x2, y2] = board.coordToPos(arrow[2], arrow[3]);
+            x1 += (this.tile_width/2); y1 += (this.tile_height/2);
+            x2 += (this.tile_width/2); y2 += (this.tile_height/2);
+            
+            if (first) {
+                ctx.moveTo(x1, y1);
+                first = false;
             }
+            ctx.lineTo(x2, y2);
         });
+        ctx.stroke();
+
+        // Inner bright line
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#fff';
+        ctx.shadowBlur = 0;
+        ctx.stroke();
+
+        // Draw Arrowhead at the end
+        const last = this.arrows[this.arrows.length - 1];
+        let [lx1, ly1] = board.coordToPos(last[0], last[1]);
+        let [lx2, ly2] = board.coordToPos(last[2], last[3]);
+        lx1 += (this.tile_width/2); ly1 += (this.tile_height/2);
+        lx2 += (this.tile_width/2); ly2 += (this.tile_height/2);
+        
+        const headlen = 10;
+        const theta = Math.atan2(ly2 - ly1, lx2 - lx1);
+        
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.moveTo(lx2, ly2);
+        ctx.lineTo(lx2 - headlen * Math.cos(theta - Math.PI/6), ly2 - headlen * Math.sin(theta - Math.PI/6));
+        ctx.lineTo(lx2 - headlen * Math.cos(theta + Math.PI/6), ly2 - headlen * Math.sin(theta + Math.PI/6));
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.restore();
         this.arrows.splice(0, this.arrows.length)
     }
 
@@ -981,7 +1047,16 @@ const timer = {
     init: function(callback) {
         this.elapsed = 0;
         this.callback = callback;
+        this.callback(this); // Draw immediately
         this.start();
+        
+        // Ensure font is ready and redraw if it wasn't
+        if (document.fonts) {
+            document.fonts.ready.then(() => {
+                this.callback(this);
+            });
+        }
+        
         const timerStart = this.start.bind(this);
         window.onfocus = function () {
             //console.log("on focus");
@@ -1009,18 +1084,22 @@ var next_hint = DEFAULT_TIMEOUT;
 function updateScoreCanvas(timer)
 {
     let xpos = 0;
-    let ypos = 40;
-
     const canvas = document.getElementById('score_canvas');
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
-    const font_size = 30;
-    ctx.font = font_size + "px Juice Avocado";
+    const font_size = 24;
+    ctx.font = font_size + "px Arial, sans-serif";
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
     ctx.fillStyle = "#fff";
 
-    ctx.fillText("Elapsed: " + new Date(timer.elapsed * 1000).toISOString().slice(14, 19),
-                 xpos, ypos);
+    const date = new Date(timer.elapsed * 1000);
+    const timeStr = timer.elapsed >= 3600 
+        ? date.toISOString().slice(11, 19) // HH:MM:SS
+        : date.toISOString().slice(14, 19); // MM:SS
+
+    ctx.fillText(timeStr, canvas.width / 2, canvas.height / 2 + 1); // +1 for visual balance with Arial baseline
 
     next_hint--;
     if (next_hint <= 0) {
