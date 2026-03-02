@@ -113,7 +113,7 @@ canvas {
 
 /* Dropdowns & Buttons */
 .dropbtn {
-    background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+    background: linear-gradient(180deg, #8577ef 0%, #6c5ce7 50%, #5a4bd1 100%);
     color: white;
     padding: 13px 22px;
     font-size: 16px;
@@ -122,16 +122,36 @@ canvas {
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 14px rgba(108, 92, 231, 0.45);
+    transition: all 0.15s ease;
+    box-shadow:
+        0 1px 0 rgba(255,255,255,0.25) inset,  /* top highlight */
+        0 -2px 0 rgba(0,0,0,0.25) inset,        /* bottom inner shadow */
+        0 5px 0 #3d2fa8,                          /* bottom solid edge */
+        0 7px 12px rgba(0,0,0,0.4);              /* drop shadow */
     letter-spacing: 1px;
     text-transform: uppercase;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    position: relative;
+    top: 0;
 }
 
 .dropbtn:hover {
-    transform: translateY(-2px) scale(1.04);
-    box-shadow: 0 8px 22px rgba(108, 92, 231, 0.65);
+    background: linear-gradient(180deg, #9588f5 0%, #7c6cf0 50%, #6a5ae0 100%);
+    box-shadow:
+        0 1px 0 rgba(255,255,255,0.25) inset,
+        0 -2px 0 rgba(0,0,0,0.25) inset,
+        0 5px 0 #3d2fa8,
+        0 9px 16px rgba(0,0,0,0.45);
+    top: -2px;
+}
+
+.dropbtn:active {
+    background: linear-gradient(180deg, #5a4bd1 0%, #6c5ce7 100%);
+    box-shadow:
+        0 1px 0 rgba(0,0,0,0.2) inset,
+        0 2px 0 #3d2fa8,
+        0 2px 6px rgba(0,0,0,0.3);
+    top: 3px;
 }
 
 .dropdown {

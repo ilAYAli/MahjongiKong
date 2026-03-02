@@ -1409,14 +1409,6 @@ function updateScoreCanvas(timer)
     ctx.textBaseline = 'alphabetic';
     ctx.fillText(board.totalScore.toLocaleString(), cssW / 2, 24);
 
-    // Separator
-    ctx.beginPath();
-    ctx.moveTo(10, 29);
-    ctx.lineTo(cssW - 10, 29);
-    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
     // Bonus countdown — show next match point value, colour shifts as time runs out
     if (!board.demo_mode) {
         const timeSinceLast = (Date.now() - board.lastMatchTime) / 1000;
@@ -1428,7 +1420,7 @@ function updateScoreCanvas(timer)
         ctx.fillStyle = '#fff';
         ctx.shadowBlur = 0;
         ctx.textBaseline = 'alphabetic';
-        ctx.fillText(`NEXT +${nextPoints}`, cssW / 2, cssH - 2);
+        ctx.fillText(`NEXT +${nextPoints}`, cssW / 2, cssH - 8);
         ctx.globalAlpha = 1;
     }
 
