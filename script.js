@@ -1405,9 +1405,11 @@ function updateScoreCanvas(timer)
     // Score number
     ctx.font = "bold 22px 'Juice Avocado', Arial, sans-serif";
     ctx.fillStyle = "#fff";
-    ctx.shadowBlur = 0;
+    ctx.shadowColor = 'rgba(200, 190, 255, 0.85)';
+    ctx.shadowBlur = 10;
     ctx.textBaseline = 'alphabetic';
     ctx.fillText(board.totalScore.toLocaleString(), cssW / 2, 24);
+    ctx.shadowBlur = 0;
 
     // Bonus countdown — show next match point value, colour shifts as time runs out
     if (!board.demo_mode) {
@@ -1418,9 +1420,11 @@ function updateScoreCanvas(timer)
         ctx.globalAlpha = pulse;
         ctx.font = "bold 15px 'Juice Avocado', Arial, sans-serif";
         ctx.fillStyle = '#fff';
-        ctx.shadowBlur = 0;
+        ctx.shadowColor = 'rgba(200, 190, 255, 0.75)';
+        ctx.shadowBlur = 8;
         ctx.textBaseline = 'alphabetic';
         ctx.fillText(`NEXT +${nextPoints}`, cssW / 2, cssH - 8);
+        ctx.shadowBlur = 0;
         ctx.globalAlpha = 1;
     }
 

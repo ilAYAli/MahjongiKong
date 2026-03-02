@@ -134,7 +134,7 @@ canvas {
         0 7px 12px rgba(0,0,0,0.4);              /* drop shadow */
     letter-spacing: 1px;
     text-transform: uppercase;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    text-shadow: 0 0 8px rgba(200, 190, 255, 0.7), 0 1px 3px rgba(0,0,0,0.5);
     position: relative;
     top: 0;
 }
