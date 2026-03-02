@@ -19,9 +19,6 @@ RestartSec=5
 
 # Hardening
 NoNewPrivileges=true
-PrivateTmp=true
-ProtectSystem=strict
-ReadWritePaths=/home/petter/code/javascript/MahjongiKong/server/data
 
 [Install]
 WantedBy=multi-user.target
