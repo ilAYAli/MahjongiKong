@@ -16,6 +16,12 @@ const viewPlayer = urlParams.get('player') || '';
 if (viewMode) document.body.classList.add('view-mode');
 if (viewMode) {
     canvas.addEventListener('click', () => history.back(), { once: true });
+    if (viewPlayer) {
+        const banner = document.createElement('div');
+        banner.id = 'view-banner';
+        banner.textContent = viewPlayer + "'s board";
+        document.getElementById('board_div').prepend(banner);
+    }
 }
 
 let level = 0;
@@ -776,18 +782,13 @@ class GameBoard {
 
         if (viewMode) {
             ctx.save();
-            ctx.fillStyle = "rgba(0,0,0,0.45)";
+            ctx.fillStyle = "rgba(0,0,0,0.3)";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
-            if (viewPlayer) {
-                ctx.font = "bold 48px 'Juice Avocado', sans-serif";
-                ctx.fillStyle = "rgba(255,215,0,0.5)";
-                ctx.fillText(viewPlayer + "'s board", canvas.width / 2, canvas.height / 2 - 40);
-            }
             ctx.font = "28px 'Juice Avocado', sans-serif";
-            ctx.fillStyle = "rgba(162,155,254,0.35)";
-            ctx.fillText("click to go back", canvas.width / 2, canvas.height / 2 + (viewPlayer ? 20 : 0));
+            ctx.fillStyle = "rgba(162,155,254,0.4)";
+            ctx.fillText("click to go back", canvas.width / 2, canvas.height / 2);
             ctx.restore();
         }
 
