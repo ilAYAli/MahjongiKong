@@ -15,7 +15,7 @@ const viewMode   = !!urlParams.get('view')
 const viewPlayer = urlParams.get('player') || '';
 if (viewMode) document.body.classList.add('view-mode');
 if (viewMode) {
-    canvas.addEventListener('click', () => history.back(), { once: true });
+    document.body.addEventListener('click', () => history.back(), { once: true });
     const banner = document.createElement('div');
     banner.id = 'view-banner';
     banner.innerHTML = (viewPlayer ? `<span>${viewPlayer}'s board</span>` : '') +
