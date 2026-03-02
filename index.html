@@ -35,21 +35,7 @@
             <div id="highscore_div" class="dropdown-content">
             </div>
           </div>
-          <div class="dropdown">
-            <button id="helpBtn" class="dropbtn">Help</button>
-            <div class="dropdown-content dropdown-help">
-              <a href="#" onclick="board.hint(true);">Hint</a>
-              <div class="instructions-mini">
-                <h4>How to Play</h4>
-                <ul>
-                  <li>Clear two identical tiles by drawing a connecting line.</li>
-                  <li>The line can have at most two 90-degree angles.</li>
-                  <li>The line cannot pass through other tiles.</li>
-                  <li><strong>Note:</strong> Hint highlights and solves a pair for 0 points. Board auto-shuffles when no moves remain.</li>
-                </ul>
-              </div>
-            </div>
-          </div>
+          <button id="hintBtn" class="dropbtn" onclick="board.hint(true)">Hint</button>
           <div class="dropdown" id="share" style="display:none">
             <button id="shareBtn" class="dropbtn">Share</button>
             <div class="dropdown-content">
@@ -70,6 +56,14 @@
 
       <script src="script.js"> </script>
       <script src="highscore.js"> </script>
+
+      <div class="instructions-footer">
+        <span>Clear two identical tiles by drawing a connecting line with at most two 90° turns.</span>
+        <span class="instr-sep">·</span>
+        <span>Hint solves a pair for 0 points.</span>
+        <span class="instr-sep">·</span>
+        <span>Board auto-shuffles when no moves remain.</span>
+      </div>
 
       <!-- Score submission modal -->
       <div id="hs-modal" style="display:none">

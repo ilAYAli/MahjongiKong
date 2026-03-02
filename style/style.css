@@ -266,6 +266,23 @@ canvas {
 .instructions-mini li { font-size: 12px; color: #bbb; line-height: 1.4; margin-bottom: 8px; }
 .instructions-mini li strong { color: #fab1a0; }
 
+.instructions-footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    margin-top: 16px;
+    padding: 10px 20px;
+    border-top: 1px solid rgba(162, 155, 254, 0.12);
+    font-size: 12px;
+    color: rgba(187, 187, 187, 0.6);
+    letter-spacing: 0.3px;
+}
+.instructions-footer .instr-sep {
+    color: rgba(162, 155, 254, 0.35);
+}
+
 #orientation-warning {
     display: none;
     position: fixed;
