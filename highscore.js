@@ -49,8 +49,9 @@ async function loadHighscore() {
         nameEl.className = "hs-name";
         if (row.board_url) {
             const link = document.createElement("a");
-            const sep  = row.board_url.includes("?") ? "&" : "?";
-            link.href = row.board_url + sep + "view=1";
+            const qs   = row.board_url.startsWith("?") ? row.board_url : row.board_url.slice(row.board_url.indexOf("?"));
+            const sep  = qs.includes("view=") ? "&" : (qs + "&view=1").slice(qs.length);
+            link.href = location.origin + location.pathname + qs + "&view=1";
             link.textContent = row.name;
             link.style.color = "inherit";
             link.style.textDecoration = "underline";
@@ -92,13 +93,15 @@ async function gameOver(elapsed, totalScore) {
             modal.style.display = "none";
 
             const board_url = (typeof encodeBoard === "function") ? encodeBoard() : null;
+            // Store only the query string so it works on any host
+            const board_qs = board_url ? board_url.slice(board_url.indexOf("?")) : null;
 
             let result;
             try {
                 const resp = await fetch(`${API_BASE}/highscores`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ name, score: totalScore, board_url }),
+                    body: JSON.stringify({ name, score: totalScore, board_url: board_qs }),
                 });
                 const text = await resp.text();
                 result = text ? JSON.parse(text) : {};
