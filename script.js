@@ -679,7 +679,6 @@ class GameBoard {
         
         requestAnimationFrame(() => this.draw(ctx));
     }
-    }
 
     posToBoardIdx(x, y) {
         let tile_x = Math.floor(x / this.tile_width);
