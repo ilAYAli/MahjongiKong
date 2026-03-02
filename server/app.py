@@ -166,12 +166,24 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/api/highscores":
             with _db_lock:
                 conn = get_conn()
+                # Fetch more than TOP_N in case there are case-duplicate names
                 rows = conn.execute(
-                    "SELECT name, score, updated_at AS date, board_url, hints FROM scores ORDER BY score DESC LIMIT ?",
-                    (TOP_N,)
+                    "SELECT name, score, updated_at AS date, board_url, hints FROM scores ORDER BY score DESC"
                 ).fetchall()
                 conn.close()
-            self._send_json(200, [dict(r) for r in rows])
+            # Deduplicate case-insensitively: rows already sorted DESC so first hit is best
+            seen = {}
+            deduped = []
+            for r in rows:
+                key = r["name"].strip().lower()
+                if key not in seen:
+                    seen[key] = True
+                    d = dict(r)
+                    d["name"] = d["name"].strip().capitalize()
+                    deduped.append(d)
+                    if len(deduped) >= TOP_N:
+                        break
+            self._send_json(200, deduped)
         else:
             # Serve static game files for local dev
             path = self.path.split("?")[0]
@@ -233,14 +245,24 @@ class Handler(BaseHTTPRequestHandler):
         date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         with _db_lock:
             conn = get_conn()
-            conn.execute("""
-                INSERT INTO scores (name, score, updated_at, board_url, hints) VALUES (?, ?, ?, ?, ?)
-                ON CONFLICT(name) DO UPDATE SET
-                  score      = CASE WHEN excluded.score > scores.score THEN excluded.score ELSE scores.score END,
-                  updated_at = CASE WHEN excluded.score > scores.score THEN excluded.updated_at ELSE scores.updated_at END,
-                  board_url  = CASE WHEN excluded.score > scores.score THEN excluded.board_url ELSE scores.board_url END,
-                  hints      = CASE WHEN excluded.score > scores.score THEN excluded.hints ELSE scores.hints END
-            """, (name, score, date, board_url, hints))
+            # Case-insensitive upsert: find any existing row for this name
+            existing = conn.execute(
+                "SELECT name, score FROM scores WHERE LOWER(name) = LOWER(?)", (name,)
+            ).fetchone()
+            if existing:
+                if score > existing["score"]:
+                    # New score is better: remove old row(s) and insert fresh
+                    conn.execute("DELETE FROM scores WHERE LOWER(name) = LOWER(?)", (name,))
+                    conn.execute(
+                        "INSERT INTO scores (name, score, updated_at, board_url, hints) VALUES (?, ?, ?, ?, ?)",
+                        (name, score, date, board_url, hints)
+                    )
+                # else keep existing record as-is
+            else:
+                conn.execute(
+                    "INSERT INTO scores (name, score, updated_at, board_url, hints) VALUES (?, ?, ?, ?, ?)",
+                    (name, score, date, board_url, hints)
+                )
             conn.commit()
             rank = conn.execute(
                 "SELECT COUNT(*) FROM scores WHERE score > ?", (score,)
