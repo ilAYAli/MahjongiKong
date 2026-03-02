@@ -1457,12 +1457,12 @@ function updateScoreCanvas(timer)
     if (!board.demo_mode) {
         const timeSinceLast = (Date.now() - board.lastMatchTime) / 1000;
         const clampedTime = Math.max(1, Math.min(30, timeSinceLast));
-        const nextPoints = Math.round(1000 - (900 * (clampedTime - 1) / 29));
-        const pulse = clampedTime > 20 ? 0.75 + 0.25 * Math.sin(Date.now() / 150) : 1;
+        const nextPoints = board.hintedMove ? 0 : Math.round(1000 - (900 * (clampedTime - 1) / 29));
+        const pulse = !board.hintedMove && clampedTime > 20 ? 0.75 + 0.25 * Math.sin(Date.now() / 150) : 1;
         ctx.globalAlpha = pulse;
         ctx.font = "bold 15px 'Juice Avocado', Arial, sans-serif";
-        ctx.fillStyle = '#fff';
-        ctx.shadowColor = 'rgba(200, 190, 255, 0.9)';
+        ctx.fillStyle = board.hintedMove ? 'rgba(180,180,180,0.7)' : '#fff';
+        ctx.shadowColor = board.hintedMove ? 'rgba(180,180,180,0.4)' : 'rgba(200, 190, 255, 0.9)';
         ctx.shadowBlur = 10;
         ctx.textBaseline = 'alphabetic';
         ctx.fillText(`NEXT +${nextPoints}`, cssW / 2, cssH - 8);
