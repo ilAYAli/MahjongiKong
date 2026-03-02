@@ -140,7 +140,8 @@ function encodeBoard() {
         }
     }
     let ec = LZString.compressToEncodedURIComponent(pt);
-    let uri = "https://wahlman.no/code/MahjongiKong?l=";
+    let base = location.origin + location.pathname;
+    let uri = base + "?l=";
     console.log(uri + ec);
 
     URI = uri + ec;
