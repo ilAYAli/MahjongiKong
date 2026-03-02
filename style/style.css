@@ -138,7 +138,7 @@ canvas {
     display: none;
     position: absolute;
     background: linear-gradient(160deg, #1e1260 0%, #130e38 100%);
-    min-width: 200px;
+    min-width: 380px;
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 20px rgba(108,92,231,0.25);
     border-radius: 12px;
     border: 1px solid rgba(162, 155, 254, 0.3);
@@ -166,11 +166,13 @@ canvas {
 
 .dropdown-content a {
     color: #eee;
-    padding: 14px 20px;
+    padding: 10px 20px;
     text-decoration: none;
     display: block;
-    font-size: 14px;
+    font-size: 13px;
+    font-family: 'Courier New', monospace;
     font-weight: 500;
+    white-space: nowrap;
     transition: all 0.2s;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }

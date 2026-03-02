@@ -31,7 +31,10 @@ async function loadHighscore() {
     rows.forEach((row, i) => {
         const a = document.createElement("a");
         a.href = "#";
-        a.textContent = `#${i + 1}  ${row.name}  -  ${row.score.toLocaleString()} pts  (${row.date})`;
+        const rank  = `#${i + 1}`.padEnd(3);
+        const name  = row.name.padEnd(20);
+        const score = row.score.toLocaleString().padStart(7);
+        a.textContent = `${rank}  ${name}  ${score} pts  ${row.date}`;
         div.appendChild(a);
     });
 }
