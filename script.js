@@ -258,6 +258,7 @@ class GameBoard {
         this.totalScore = 0;
         this.hintCount = 0;
         this.hintedMove = false;
+        this.comboCount = 0;
         this.waitingForFirstClick = true;
         this.lastMatchTime = Date.now();
         updateTimeBar(0);
@@ -750,6 +751,27 @@ class GameBoard {
                     ctx.arc(px, py, (1 - progress) * 5, 0, Math.PI * 2);
                     ctx.fill();
                 });
+            } else if (anim.type === 'combo') {
+                // Scale up fast, hold, then fade out
+                const scale = progress < 0.15 ? progress / 0.15 : 1.0;
+                const alpha = progress > 0.55 ? Math.max(0, 1 - (progress - 0.55) / 0.45) : 1;
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.translate(anim.x, anim.y - progress * 50);
+                ctx.scale(scale, scale);
+                const fontSize = anim.count >= 3 ? 56 : 42;
+                ctx.font = `bold ${fontSize}px 'Juice Avocado', Arial, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                const hue = anim.count >= 4 ? 35 : anim.count >= 3 ? 42 : 52;
+                ctx.fillStyle = `hsl(${hue}, 100%, 62%)`;
+                ctx.shadowColor = `hsl(${hue}, 100%, 40%)`;
+                ctx.shadowBlur = 24;
+                ctx.fillText(anim.label, 0, 0);
+                // second pass for extra glow
+                ctx.shadowBlur = 48;
+                ctx.fillText(anim.label, 0, 0);
+                ctx.restore();
             }
             ctx.restore();
             
@@ -1056,6 +1078,7 @@ class GameBoard {
             if (status != SOLVED.none) {
                 this.hintCount++;
                 this.hintedMove = true;
+                this.comboCount = 0;  // hint breaks combo
                 timer.elapsed += 60;
                 triggerPenalty();
             }
@@ -1151,11 +1174,31 @@ class GameBoard {
                         // Calculate points based on time since last match (0 if hint was used)
                         const timeSinceLast = (Date.now() - this.lastMatchTime) / 1000;
                         const clampedTime = Math.max(1, Math.min(30, timeSinceLast));
-                        const pointsAwarded = this.hintedMove ? 0 : Math.round(1000 - (900 * (clampedTime - 1) / 29));
+                        const basePoints = this.hintedMove ? 0 : Math.round(1000 - (900 * (clampedTime - 1) / 29));
+                        // Combo: consecutive matches within 4 seconds
+                        if (!this.hintedMove && timeSinceLast < 5) {
+                            this.comboCount++;
+                        } else {
+                            this.comboCount = 0;
+                        }
+                        const comboMult = this.comboCount >= 4 ? 3.0 : this.comboCount >= 3 ? 2.0 : this.comboCount >= 2 ? 1.5 : 1.0;
+                        const pointsAwarded = Math.round(basePoints * comboMult);
                         this.hintedMove = false;
                         this.totalScore += pointsAwarded;
                         this.lastMatchTime = Date.now();
                         updateTimeBar();
+                        if (this.comboCount >= 2 && basePoints > 0) {
+                            const comboLabel = this.comboCount >= 4 ? 'COMBO ×3!' : this.comboCount >= 3 ? 'COMBO ×2!' : 'COMBO!';
+                            this.animations.push({
+                                type: 'combo',
+                                x: canvas.width / 2,
+                                y: canvas.height / 2,
+                                label: comboLabel,
+                                count: this.comboCount,
+                                start: Date.now(),
+                                duration: 1100
+                            });
+                        }
                         this.animations.push({
                             type: 'points',
                             x: xpos,
@@ -1219,6 +1262,7 @@ class GameBoard {
         this.totalScore = 0;
         this.hintCount = 0;
         this.hintedMove = false;
+        this.comboCount = 0;
         this.waitingForFirstClick = true;
         this.lastMatchTime = Date.now();
         updateTimeBar(0);
