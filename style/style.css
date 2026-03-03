@@ -71,6 +71,12 @@ body {
     width: fit-content;
 }
 
+#sfxBtn {
+    padding: 13px 14px;
+    font-size: 18px;
+    letter-spacing: 0;
+}
+
 #board_div {
     position: relative;
     border-radius: 12px;
@@ -315,6 +321,7 @@ canvas {
 
     .dropbtn { padding: 11px 14px; font-size: 13px; }
     #score_div { height: auto; }
+    #sfxBtn { padding: 11px 10px; }
 }
 
 .penalty {

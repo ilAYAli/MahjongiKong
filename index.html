@@ -36,6 +36,7 @@
             </div>
           </div>
           <button id="hintBtn" class="dropbtn" onclick="board.hint(true)">Hint</button>
+          <button id="sfxBtn" class="dropbtn" onclick="sfx.toggle()" title="Toggle sound">🔊</button>
           <div class="dropdown" id="share" style="display:none">
             <button id="shareBtn" class="dropbtn">Share</button>
             <div class="dropdown-content">
@@ -54,6 +55,7 @@
         <canvas id="board_canvas" width="1024" height="768"></canvas>
       </div>
 
+      <script src="sfx.js"> </script>
       <script src="script.js"> </script>
       <script src="highscore.js"> </script>
 

@@ -55,6 +55,7 @@ window.onload = () => {
     loadHighscore();
     resize();
     board.init();
+    sfx.init();
 }
 
 
@@ -1123,6 +1124,7 @@ class GameBoard {
             if (tile == TILE.active) {
                 board.src_tile = board_idx;
                 board.tiles[board.src_tile][1] = TILE.selected;
+                sfx.select();
             }
         } else {
             let [src_tile_idx, src_tile_state] = board.tiles[board.src_tile];
@@ -1138,12 +1140,14 @@ class GameBoard {
                     board.tiles[board.src_tile] = [src_tile_idx, TILE.active]
                     board.tiles[board.dst_tile] = [dst_tile_idx, TILE.active]
                     this.hintedMove = false;
+                    sfx.mismatch();
                 } else {
                     board.tiles[board.dst_tile] = [dst_tile_idx, TILE.selected];
                     if (!board.hasValidPath(board.src_tile, board_idx)) {
                         board.tiles[board.src_tile] = [src_tile_idx, TILE.active]
                         board.tiles[board.dst_tile] = [dst_tile_idx, TILE.active]
                         this.hintedMove = false;
+                        sfx.mismatch();
                     } else {
                         // Success! Trigger animations
                         board.arrowShowTime = Date.now(); // start the arrow fade-out timer
@@ -1187,6 +1191,7 @@ class GameBoard {
                         this.totalScore += pointsAwarded;
                         this.lastMatchTime = Date.now();
                         updateTimeBar();
+                        sfx.match(this.comboCount);
                         if (this.comboCount >= 2 && basePoints > 0) {
                             const comboLabel = this.comboCount >= 4 ? 'COMBO ×3!' : this.comboCount >= 3 ? 'COMBO ×2!' : 'COMBO!';
                             this.animations.push({
@@ -1216,6 +1221,7 @@ class GameBoard {
 
                         const remaining_pices = this.#getNumActiveTiles();
                         if (!remaining_pices) {
+                            sfx.boardClear();
                             gameOver(timer.elapsed, board.totalScore, board.hintCount);
                             board.init();
                             return;
