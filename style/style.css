@@ -72,10 +72,23 @@ body {
 }
 
 #sfxBtn {
-    padding: 13px 14px;
-    font-size: 18px;
-    letter-spacing: 0;
+    background: none;
+    border: none;
+    box-shadow: none;
+    padding: 8px 10px;
+    font-size: 22px;
+    cursor: pointer;
+    opacity: 0.85;
+    filter: brightness(6) saturate(0);
+    transition: opacity 0.2s, transform 0.1s;
+    line-height: 1;
+    position: relative;
 }
+
+#sfxBtn:hover { opacity: 1; transform: scale(1.15); }
+#sfxBtn:active { transform: scale(0.95); }
+
+#sfxBtn.muted { opacity: 0.3; }
 
 #board_div {
     position: relative;
@@ -321,7 +334,6 @@ canvas {
 
     .dropbtn { padding: 11px 14px; font-size: 13px; }
     #score_div { height: auto; }
-    #sfxBtn { padding: 11px 10px; }
 }
 
 .penalty {

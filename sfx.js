@@ -18,7 +18,11 @@ const sfx = (() => {
 
     function updateBtn() {
         const btn = document.getElementById('sfxBtn');
-        if (btn) btn.textContent = _enabled ? '🔊' : '🔇';
+        if (btn) {
+            btn.textContent = '🎵';
+            btn.classList.toggle('muted', !_enabled);
+            btn.style.opacity = '';
+        }
     }
 
     return {
