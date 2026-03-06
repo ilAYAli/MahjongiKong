@@ -20,7 +20,6 @@ HOST        = "127.0.0.1"
 PORT        = 3001
 TOP_N       = 10
 MAX_NAME    = 20
-MAX_SCORE   = 100_000
 RATE_LIMIT  = 5   # max POST per IP
 RATE_WINDOW = 60  # seconds
 
@@ -97,7 +96,7 @@ def validate_score(raw):
         n = int(raw)
     except (TypeError, ValueError):
         return None
-    return n if 1 <= n <= MAX_SCORE else None
+    return n if n >= 1 else None
 
 # ---------------------------------------------------------------------------
 # Static file root (local dev only)
@@ -220,7 +219,7 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json(400, {"error": f"Invalid name (1-{MAX_NAME} printable ASCII chars)."})
             return
         if score is None:
-            self._send_json(400, {"error": f"Invalid score (1-{MAX_SCORE})."})
+            self._send_json(400, {"error": "Invalid score (must be >= 1)."})
             return
 
         date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
