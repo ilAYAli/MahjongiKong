@@ -27,7 +27,7 @@ let level = 0;
 let URI;
 let QR;
 
-const DEFAULT_TIMEOUT = 60 * 5;
+
 
 const TILE = {
     unused:     "unused",
@@ -1216,7 +1216,6 @@ class GameBoard {
                         board.tiles[board.src_tile] = [src_tile_idx, TILE.dead]
                         board.tiles[board.dst_tile] = [dst_tile_idx, TILE.dead]
                         board.score++;
-                        next_hint = DEFAULT_TIMEOUT;
                         this.arrows.splice(0, this.arrows.length); // clear hint arrow after match
 
                         const remaining_pices = this.#getNumActiveTiles();
@@ -1497,7 +1496,6 @@ timer.init((t) => {
     updateScoreCanvas(t);
 });
 
-var next_hint = DEFAULT_TIMEOUT;
 function updateScoreCanvas(timer)
 {
     const canvas = document.getElementById('score_canvas');
@@ -1531,15 +1529,6 @@ function updateScoreCanvas(timer)
     ctx.fillText(board.totalScore.toLocaleString(), cssW / 2, 17);
     ctx.shadowBlur = 0;
 
-    next_hint--;
-    if (next_hint <= 0) {
-        next_hint = DEFAULT_TIMEOUT;
-        console.log("scheduling autosolve");
-        const status = board.hint(false);
-        if (status == SOLVED.none) {
-            alert("this board might not be solvable");
-        }
-    }
 }
 
 
