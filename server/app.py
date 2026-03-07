@@ -56,6 +56,11 @@ def get_conn():
         conn.execute("ALTER TABLE scores ADD COLUMN hints INTEGER NOT NULL DEFAULT 0")
     except Exception:
         pass
+    # migrate existing DBs that don't have demo flag yet
+    try:
+        conn.execute("ALTER TABLE scores ADD COLUMN demo INTEGER NOT NULL DEFAULT 0")
+    except Exception:
+        pass
     conn.commit()
     return conn
 
@@ -148,7 +153,7 @@ class Handler(BaseHTTPRequestHandler):
                 conn = get_conn()
                 # Fetch more than TOP_N in case there are case-duplicate names
                 rows = conn.execute(
-                    "SELECT name, score, updated_at AS date, board_url, hints FROM scores ORDER BY score DESC"
+                    "SELECT name, score, updated_at AS date, board_url, hints FROM scores WHERE COALESCE(demo, 0) = 0 ORDER BY score DESC"
                 ).fetchall()
                 conn.close()
             # Deduplicate case-insensitively: rows already sorted DESC so first hit is best
@@ -205,7 +210,8 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json(400, {"error": "Invalid JSON"})
             return
 
-        name  = validate_name(data.get("name"))
+        is_demo = bool(data.get("demo", False))
+        name  = "__demo__" if is_demo else validate_name(data.get("name"))
         score = validate_score(data.get("score"))
         board_url = data.get("board_url")
         if not isinstance(board_url, str) or len(board_url) > 2048:
@@ -231,17 +237,17 @@ class Handler(BaseHTTPRequestHandler):
             ).fetchone()
             if existing:
                 if score > existing["score"]:
-                    # New score is better: remove old row(s) and insert fresh
+                    # New score is better: remove old row and insert fresh
                     conn.execute("DELETE FROM scores WHERE LOWER(name) = LOWER(?)", (name,))
                     conn.execute(
-                        "INSERT INTO scores (name, score, updated_at, board_url, hints) VALUES (?, ?, ?, ?, ?)",
-                        (name, score, date, board_url, hints)
+                        "INSERT INTO scores (name, score, updated_at, board_url, hints, demo) VALUES (?, ?, ?, ?, ?, ?)",
+                        (name, score, date, board_url, hints, 1 if is_demo else 0)
                     )
-                # else keep existing record as-is
+                # else keep existing (higher) record as-is
             else:
                 conn.execute(
-                    "INSERT INTO scores (name, score, updated_at, board_url, hints) VALUES (?, ?, ?, ?, ?)",
-                    (name, score, date, board_url, hints)
+                    "INSERT INTO scores (name, score, updated_at, board_url, hints, demo) VALUES (?, ?, ?, ?, ?, ?)",
+                    (name, score, date, board_url, hints, 1 if is_demo else 0)
                 )
             conn.commit()
             rank = conn.execute(

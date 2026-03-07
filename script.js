@@ -656,18 +656,25 @@ class GameBoard {
                 this.#addBurst(r1 * this.tile_width + this.tile_width / 2, c1 * this.tile_height + this.tile_height / 2);
                 this.#addBurst(r2 * this.tile_width + this.tile_width / 2, c2 * this.tile_height + this.tile_height / 2);
 
-                // Only accumulate score in non-demo (real player) play
-                if (!this.demo_mode) {
+                // Accumulate score for both real play and demo
+                {
                     const timeSinceLast = (Date.now() - this.lastMatchTime) / 1000;
                     const clampedTime = Math.max(1, Math.min(30, timeSinceLast));
-                    const pointsAwarded = Math.round(1000 - (900 * (clampedTime - 1) / 29));
+                    const basePoints = Math.round(1000 - (900 * (clampedTime - 1) / 29));
+                    if (timeSinceLast < 5) {
+                        this.comboCount++;
+                    } else {
+                        this.comboCount = 0;
+                    }
+                    const comboMult = this.comboCount >= 4 ? 3.0 : this.comboCount >= 3 ? 2.0 : this.comboCount >= 2 ? 1.5 : 1.0;
+                    const pointsAwarded = Math.round(basePoints * comboMult);
                     this.totalScore += pointsAwarded;
                     this.lastMatchTime = Date.now();
-                    updateTimeBar();
+                    if (!this.demo_mode) updateTimeBar();
                     this.animations.push({
                         type: 'points',
-                        x: r * this.tile_width + this.tile_width/2,
-                        y: c * this.tile_height + this.tile_height/2,
+                        x: r1 * this.tile_width + this.tile_width/2,
+                        y: c1 * this.tile_height + this.tile_height/2,
                         points: pointsAwarded,
                         start: Date.now(),
                         duration: 1200
@@ -1560,10 +1567,20 @@ function demo(activate = true, delay = 1000) {
                     document.getElementById('score_div').style.visibility = '';
                     { const btn = document.getElementById('demoBtn'); if (btn) { btn.textContent = 'Demo'; btn.style.outline = ''; } }
                     break;
-                case SOLVED.all:
-                    console.log("board solved, resarting");
+                case SOLVED.all: {
+                    console.log("board solved, restarting");
+                    // Capture score BEFORE board.init() resets it
+                    const demoScore = board.totalScore;
+                    fetch(`${API_BASE}/highscores`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ name: "__demo__", score: demoScore, demo: true }),
+                    }).then(r => r.json())
+                      .then(d => console.log(`Demo score saved: ${demoScore} pts`, d))
+                      .catch(e => console.warn("Demo score save failed:", e));
                     board.init();
                     break;
+                }
                 case SOLVED.one:
                     window.setTimeout(() => {
                         board.removeSelectedTilePair();
