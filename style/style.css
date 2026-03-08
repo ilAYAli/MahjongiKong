@@ -462,3 +462,39 @@ body.view-mode #board_div { margin-top: 0; }
 }
 
 #hs-modal-submit:hover, #hs-modal-skip:hover { opacity: 0.8; }
+
+/* Game message notification */
+.game-message {
+    position: fixed;
+    top: 15%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: transparent;
+    color: #ffffff !important;
+    padding: 0;
+    margin: 0;
+    border: none;
+    font-family: 'Juice Avocado', 'Segoe UI', Arial, sans-serif !important;
+    font-size: 48px !important;
+    font-weight: 700 !important;
+    letter-spacing: 4px !important;
+    text-align: center;
+    z-index: 10000;
+    text-shadow:
+        0 0 10px rgba(255, 255, 255, 0.9),
+        0 0 20px rgba(162, 155, 254, 1),
+        0 0 30px rgba(108, 92, 231, 0.9),
+        0 0 40px rgba(108, 92, 231, 0.7),
+        0 0 60px rgba(108, 92, 231, 0.5),
+        0 3px 10px rgba(0, 0, 0, 0.6);
+    opacity: 0;
+    transition: opacity 0.2s ease-out;
+    pointer-events: none;
+    text-transform: uppercase;
+    white-space: nowrap;
+    line-height: 1;
+}
+
+.game-message.show {
+    opacity: 1;
+}

@@ -50,6 +50,20 @@ function resize() {
     //ctx.canvas.height = window.innerHeight;
 }
 
+function showMessage(text, duration = 700) {
+    const message = document.createElement('div');
+    message.className = 'game-message';
+    message.textContent = text;
+    document.getElementById('board_div').appendChild(message);
+
+    setTimeout(() => message.classList.add('show'), 10);
+
+    setTimeout(() => {
+        message.classList.remove('show');
+        setTimeout(() => message.remove(), 300);
+    }, duration);
+}
+
 // ---[ triggers ]--------------------------------------------------------------
 window.onload = () => {
     loadHighscore();
@@ -1092,6 +1106,7 @@ class GameBoard {
             }
             else {
                 this.shuffle(false); // no moves, free shuffle
+                showMessage('RESHUFFLED!');
             }
             this.unselectAll();
         }
@@ -1238,6 +1253,7 @@ class GameBoard {
                         // Auto-shuffle for free if board is no longer solvable
                         if (!this.solve()) {
                             this.shuffle(false);
+                            showMessage('RESHUFFLED!');
                         }
                     }
                 }
