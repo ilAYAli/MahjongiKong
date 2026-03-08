@@ -11,17 +11,62 @@ const spriteParam = urlParams.get('spriteIdx')
 const spriteIdx = spriteParam ? Number(spriteParam) : 0;
 
 const levelParam = urlParams.get('l')
-const viewMode   = !!urlParams.get('view')
+const viewParam  = urlParams.get('view');
+const viewMode   = (viewParam === '1' || viewParam === 'true');
 const viewPlayer = urlParams.get('player') || '';
-if (viewMode) document.body.classList.add('view-mode');
-if (viewMode) {
-    document.body.addEventListener('click', () => history.back(), { once: true });
-    const banner = document.createElement('div');
-    banner.id = 'view-banner';
-    banner.innerHTML = (viewPlayer ? `<span>${viewPlayer}'s board</span>` : '') +
-        '<span id="view-back">click to go back</span>';
-    document.getElementById('board_div').prepend(banner);
+function syncViewModeUI() {
+    document.body.classList.remove('view-mode');
+    document.body.classList.toggle('view-mode-active', viewMode);
+
+    const wrapper = document.querySelector('.wrapper');
+    const menu = document.getElementById('menu');
+    const scoreDiv = document.getElementById('score_div');
+    const timeBarContainer = document.getElementById('time-bar-container');
+    const boardDiv = document.getElementById('board_div');
+
+    if (wrapper) {
+        wrapper.style.setProperty('display', 'flex');
+        wrapper.style.setProperty('visibility', 'visible');
+        wrapper.style.setProperty('opacity', '1');
+    }
+
+    if (menu) {
+        menu.style.setProperty('display', 'flex', 'important');
+        menu.style.setProperty('visibility', 'visible');
+        menu.style.setProperty('opacity', '1');
+        menu.style.removeProperty('height');
+        menu.style.removeProperty('max-height');
+    }
+    if (scoreDiv) {
+        scoreDiv.style.setProperty('display', 'flex');
+        scoreDiv.style.setProperty('visibility', 'visible');
+        scoreDiv.style.setProperty('opacity', '1');
+    }
+    if (timeBarContainer) {
+        timeBarContainer.style.removeProperty('display');
+        timeBarContainer.style.setProperty('visibility', 'visible');
+        timeBarContainer.style.setProperty('opacity', '1');
+    }
+    if (boardDiv) {
+        boardDiv.style.removeProperty('margin-top');
+    }
+
+    const existingBanner = document.getElementById('view-banner');
+    if (viewMode) {
+        if (!existingBanner) {
+            const banner = document.createElement('div');
+            banner.id = 'view-banner';
+            banner.innerHTML = (viewPlayer ? `<span>${viewPlayer}'s board</span>` : '') +
+                '<span id="view-back">click to go back</span>';
+            document.getElementById('board_div').prepend(banner);
+        }
+    } else if (existingBanner) {
+        existingBanner.remove();
+    }
 }
+
+syncViewModeUI();
+window.addEventListener('pageshow', syncViewModeUI);
 
 let level = 0;
 let URI;
@@ -51,16 +96,23 @@ function resize() {
 }
 
 function showMessage(text, duration = 700) {
+    const boardDiv = document.getElementById('board_div');
+    if (!boardDiv) return;
+
     const message = document.createElement('div');
     message.className = 'game-message';
     message.textContent = text;
-    document.getElementById('board_div').appendChild(message);
+    boardDiv.appendChild(message);
 
-    setTimeout(() => message.classList.add('show'), 10);
+    requestAnimationFrame(() => message.classList.add('show'));
 
     setTimeout(() => {
         message.classList.remove('show');
-        setTimeout(() => message.remove(), 300);
+        setTimeout(() => {
+            if (message.parentNode) {
+                message.parentNode.removeChild(message);
+            }
+        }, 220);
     }, duration);
 }
 
