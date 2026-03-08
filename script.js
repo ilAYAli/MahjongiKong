@@ -1230,7 +1230,7 @@ class GameBoard {
                         if (!remaining_pices) {
                             sfx.boardClear();
                             console.log(`Game over — score: ${board.totalScore}, max combo: ${board.maxCombo}`);
-                            gameOver(timer.elapsed, board.totalScore, board.hintCount);
+                            gameOver(timer.elapsed, board.totalScore, board.hintCount, board.maxCombo);
                             board.init();
                             return;
                         }
@@ -1573,10 +1573,11 @@ function demo(activate = true, delay = 1000) {
                     console.log("board solved, restarting");
                     // Capture score BEFORE board.init() resets it
                     const demoScore = board.totalScore;
+                    const demoMaxCombo = board.maxCombo;
                     fetch(`${API_BASE}/highscores`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ name: "__demo__", score: demoScore, demo: true }),
+                        body: JSON.stringify({ name: "__demo__", score: demoScore, demo: true, max_combo: demoMaxCombo, sprite_idx: spriteIdx }),
                     }).then(r => r.json())
                       .then(d => console.log(`Demo score saved: ${demoScore} pts`, d))
                       .catch(e => console.warn("Demo score save failed:", e));

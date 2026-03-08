@@ -78,7 +78,7 @@ async function loadHighscore() {
     });
 }
 
-async function gameOver(elapsed, totalScore, hints = 0) {
+async function gameOver(elapsed, totalScore, hints = 0, maxCombo = 0) {
     return new Promise((resolve) => {
         const modal    = document.getElementById("hs-modal");
         const scoreEl  = document.getElementById("hs-modal-score");
@@ -107,7 +107,7 @@ async function gameOver(elapsed, totalScore, hints = 0) {
                 const resp = await fetch(`${API_BASE}/highscores`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ name, score: totalScore, board_url: board_qs, hints }),
+                    body: JSON.stringify({ name, score: totalScore, board_url: board_qs, hints, max_combo: maxCombo, sprite_idx: (typeof spriteIdx !== 'undefined' ? spriteIdx : 0) }),
                 });
                 const text = await resp.text();
                 result = text ? JSON.parse(text) : {};

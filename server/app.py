@@ -61,6 +61,16 @@ def get_conn():
         conn.execute("ALTER TABLE scores ADD COLUMN demo INTEGER NOT NULL DEFAULT 0")
     except Exception:
         pass
+    # migrate existing DBs that don't have max_combo yet
+    try:
+        conn.execute("ALTER TABLE scores ADD COLUMN max_combo INTEGER NOT NULL DEFAULT 0")
+    except Exception:
+        pass
+    # migrate existing DBs that don't have sprite_idx yet
+    try:
+        conn.execute("ALTER TABLE scores ADD COLUMN sprite_idx INTEGER NOT NULL DEFAULT 0")
+    except Exception:
+        pass
     conn.commit()
     return conn
 
@@ -220,6 +230,14 @@ class Handler(BaseHTTPRequestHandler):
             hints = max(0, min(200, int(data.get("hints", 0))))
         except (TypeError, ValueError):
             hints = 0
+        try:
+            max_combo = max(0, min(1000, int(data.get("max_combo", 0))))
+        except (TypeError, ValueError):
+            max_combo = 0
+        try:
+            sprite_idx = max(0, min(100, int(data.get("sprite_idx", 0))))
+        except (TypeError, ValueError):
+            sprite_idx = 0
 
         if not name:
             self._send_json(400, {"error": f"Invalid name (1-{MAX_NAME} printable ASCII chars)."})
@@ -240,14 +258,14 @@ class Handler(BaseHTTPRequestHandler):
                     # New score is better: remove old row and insert fresh
                     conn.execute("DELETE FROM scores WHERE LOWER(name) = LOWER(?)", (name,))
                     conn.execute(
-                        "INSERT INTO scores (name, score, updated_at, board_url, hints, demo) VALUES (?, ?, ?, ?, ?, ?)",
-                        (name, score, date, board_url, hints, 1 if is_demo else 0)
+                        "INSERT INTO scores (name, score, updated_at, board_url, hints, demo, max_combo, sprite_idx) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                        (name, score, date, board_url, hints, 1 if is_demo else 0, max_combo, sprite_idx)
                     )
                 # else keep existing (higher) record as-is
             else:
                 conn.execute(
-                    "INSERT INTO scores (name, score, updated_at, board_url, hints, demo) VALUES (?, ?, ?, ?, ?, ?)",
-                    (name, score, date, board_url, hints, 1 if is_demo else 0)
+                    "INSERT INTO scores (name, score, updated_at, board_url, hints, demo, max_combo, sprite_idx) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                    (name, score, date, board_url, hints, 1 if is_demo else 0, max_combo, sprite_idx)
                 )
             conn.commit()
             rank = conn.execute(
