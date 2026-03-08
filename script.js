@@ -765,7 +765,7 @@ class GameBoard {
                 const alpha = progress > 0.55 ? Math.max(0, 1 - (progress - 0.55) / 0.45) : 1;
                 ctx.save();
                 ctx.globalAlpha = alpha;
-                ctx.translate(anim.x, anim.y - progress * 50);
+                ctx.translate(anim.x, anim.y - progress * 20);
                 ctx.scale(scale, scale);
                 const fontSize = anim.count >= 3 ? 56 : 42;
                 ctx.font = `bold ${fontSize}px 'Juice Avocado', Arial, sans-serif`;
@@ -1189,6 +1189,7 @@ class GameBoard {
                         // Combo: consecutive matches within 4 seconds
                         if (!this.hintedMove && timeSinceLast < 5) {
                             this.comboCount++;
+                            if (this.comboCount > this.maxCombo) this.maxCombo = this.comboCount;
                         } else {
                             this.comboCount = 0;
                         }
@@ -1200,11 +1201,11 @@ class GameBoard {
                         updateTimeBar();
                         sfx.match(this.comboCount);
                         if (this.comboCount >= 2 && basePoints > 0) {
-                            const comboLabel = this.comboCount >= 4 ? 'COMBO ×3!' : this.comboCount >= 3 ? 'COMBO ×2!' : 'COMBO!';
+                            const comboLabel = this.comboCount >= 4 ? `COMBO ×${this.comboCount}!` : this.comboCount >= 3 ? 'COMBO ×2!' : 'COMBO!';
                             this.animations.push({
                                 type: 'combo',
                                 x: canvas.width / 2,
-                                y: canvas.height / 2,
+                                y: 60,
                                 label: comboLabel,
                                 count: this.comboCount,
                                 start: Date.now(),
@@ -1228,6 +1229,7 @@ class GameBoard {
                         const remaining_pices = this.#getNumActiveTiles();
                         if (!remaining_pices) {
                             sfx.boardClear();
+                            console.log(`Game over — score: ${board.totalScore}, max combo: ${board.maxCombo}`);
                             gameOver(timer.elapsed, board.totalScore, board.hintCount);
                             board.init();
                             return;
