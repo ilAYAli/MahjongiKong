@@ -251,7 +251,7 @@ class Handler(BaseHTTPRequestHandler):
                 )
             conn.commit()
             rank = conn.execute(
-                "SELECT COUNT(*) FROM scores WHERE score > ?", (score,)
+                "SELECT COUNT(*) FROM scores WHERE score > ? AND COALESCE(demo, 0) = 0", (score,)
             ).fetchone()[0] + 1
             conn.close()
 
